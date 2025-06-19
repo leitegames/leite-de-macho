@@ -130,8 +130,23 @@
         #boss-health-bar { position: absolute; top: 110px; left: 10%; width: 80%; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 2px solid white; z-index: 10; padding: 2px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s; }
         #boss-health { width: 100%; height: 100%; background: linear-gradient(to right, #e74c3c, #c0392b); border-radius: 6px; transition: width 0.5s ease-out; }
         #boss-health-bar.visible { opacity: 1; }
-        #boss-arrival-text { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 52px; color: #e74c3c; text-shadow: 3px 3px 0 black; z-index: 200; opacity: 0; pointer-events: none; }
+        #boss-arrival-text, #celebration-text {
+            position: absolute; top: 40%; left: 50%;
+            transform: translateX(-50%); font-size: 52px;
+            color: #e74c3c; text-shadow: 3px 3px 0 black;
+            z-index: 200; opacity: 0; pointer-events: none;
+            width: 90%; text-align: center;
+        }
+        #celebration-text {
+            color: var(--primary-yellow);
+            text-shadow: 4px 4px 0px var(--shadow-yellow);
+            transition: opacity 0.5s ease-out;
+        }
         #boss-arrival-text.animate { animation: bounce-in 1.5s ease-out, fade-out 1.5s 2s forwards; }
+        #celebration-text.animate {
+            opacity: 1;
+            animation: bounce-in 1s ease-out;
+        }
 
         /* MELHORIA: Ajuste da animação de celebração */
         @keyframes fade-out { to { opacity: 0; transform: translateX(-50%) scale(1.5); } }
@@ -152,6 +167,7 @@
         <div id="boss-container" class="hidden">🐵</div>
         <div id="boss-health-bar"><div id="boss-health"></div></div>
         <div id="boss-arrival-text">O MACACO CHEGOU!</div>
+        <div id="celebration-text"></div>
         
         <!-- Telas de Menu -->
         <div id="main-menu" class="screen">
@@ -210,6 +226,7 @@
         const bossHealthBar = document.getElementById('boss-health-bar');
         const bossHealthFill = document.getElementById('boss-health');
         const bossArrivalText = document.getElementById('boss-arrival-text');
+        const celebrationText = document.getElementById('celebration-text');
         
         // --- Menus e Telas ---
         const mainMenu = document.getElementById('main-menu');
@@ -242,12 +259,15 @@
         let gameMode, currentLevel, levelGoal, levelStars, isInvincible = false, invincibilityTimer = 0;
         let isBossFightActive = false, bossState = {};
         let temporaryPlayerEmoji = null;
+        let nextCelebrationScore = 50;
+        let preloadedCelebration = null;
+        let isFetchingCelebration = false;
 
         // --- Constantes do Jogo ---
-        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '�': 300, '😼': 500 };
+        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
         const PLAYER_EMOJIS = Object.keys(EMOJI_PRICES);
         let unlockedEmojis = ['😏'];
-        let PLAYER_EMOJI = '😏';
+        let PLAYER_EMOJI = '�';
         const MILK_EMOJI = '🥛';
         const OBSTACLE_EMOJI = '🍆';
         const SHIELD_EMOJI = '🐅';
@@ -295,6 +315,33 @@
              totalMilkDisplays.forEach(el => el.textContent = `Leite Total: ${totalMilk}`);
         }
         
+        // --- FUNÇÃO DA API GEMINI ---
+        async function callGemini(prompt) {
+            const apiKey = ""; // Deixar em branco, o ambiente fornece
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text.replace(/["`]/g, '').trim();
+                } else {
+                    console.error("Resposta da API inválida:", result);
+                    return "És uma máquina!"; // Fallback
+                }
+            } catch (error) {
+                console.error("Erro ao chamar a API Gemini:", error);
+                return "Que talento!"; // Fallback
+            }
+        }
+
         // --- LÓGICA DE MENUS ---
         function showScreen(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); if (screen) screen.classList.remove('hidden'); }
         
@@ -365,6 +412,19 @@
             }
         }
 
+        async function showCelebration() {
+            if (preloadedCelebration) {
+                const message = await preloadedCelebration;
+                celebrationText.textContent = message;
+                celebrationText.classList.add('animate');
+
+                setTimeout(() => {
+                    celebrationText.classList.remove('animate');
+                }, 10000); // Mostra a mensagem por 10 segundos
+                preloadedCelebration = null;
+            }
+        }
+
         // --- LÓGICA PRINCIPAL DO JOGO ---
         function initGame(mode) {
             gameMode = mode;
@@ -372,6 +432,9 @@
             lives = 3; gameOver = false; particles = []; items = [];
             isInvincible = false; invincibilityTimer = 0;
             isBossFightActive = false;
+            nextCelebrationScore = 50;
+            preloadedCelebration = null;
+            isFetchingCelebration = false;
             
             if (gameMode === 'levels') { levelGoal = LEVELS[currentLevel - 1].goal; levelStars = 3; } else { levelGoal = -1; }
             player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: canvas.height - PLAYER_SIZE - 20, width: PLAYER_SIZE, height: PLAYER_SIZE, speed: 8, bobble: 0, scaleX: 1, scaleY: 1 };
@@ -440,7 +503,19 @@
                     else if (item.type === 'milk') {
                         score++;
                         triggerPlayerAnimation('collect');
-                        if (score === 100 && !isBossFightActive) startBossFight();
+                        
+                        if (score === 100 && !isBossFightActive) {
+                            startBossFight();
+                        } else if (score >= nextCelebrationScore && !isBossFightActive) {
+                            showCelebration();
+                            nextCelebrationScore += 50;
+                            isFetchingCelebration = false;
+                        } else if (score % 50 >= 40 && !isFetchingCelebration && !isBossFightActive) {
+                            isFetchingCelebration = true;
+                            const prompt = "Aja como um comediante atrevido. Gere UMA frase de comemoração muito curta (máximo 8 palavras) para um jogo adulto chamado 'Leite de Macho'. A frase deve ter um claro duplo sentido sexual, mas ser engraçada. Use o português de Portugal. Inspire-se nestes exemplos: 'Engoliu tudo!', 'Boca nervosa!', 'Profissional da garganta funda!', 'Que bela leitada!', 'Insaciável!'. Seja criativo e não repita os exemplos. Responda apenas com a frase.";
+                            preloadedCelebration = callGemini(prompt);
+                        }
+
                         createParticles(item.x, item.y, 'white', 25);
                         if (gameMode === 'levels' && score >= levelGoal) levelComplete();
                     } else if (item.type === 'obstacle' || item.type === 'banana') {
