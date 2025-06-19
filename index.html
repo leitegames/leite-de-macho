@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Leite de Macho</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Mateus e o Leite de Macho</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
@@ -21,22 +21,34 @@
             --border: #fff;
         }
 
-        /* Estilos gerais da página */
-        body {
+        /* --- MELHORIA: Estilos para garantir portabilidade e responsividade --- */
+        html, body {
             margin: 0; padding: 0; font-family: 'Fredoka One', cursive;
-            background-color: #0c0c1e; display: flex;
-            justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Previne o scroll da página */
+            background-color: #0c0c1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none; /* Previne zoom e scroll com o toque no telemóvel */
         }
 
         #game-container {
-            width: 100%; max-width: 500px; height: 100%;
+            width: 100%;
+            height: 100%;
+            max-width: 500px; /* Mantém a proporção em ecrãs largos */
+            max-height: 100vh; /* Garante que nunca é maior que o ecrã */
             background: linear-gradient(to bottom, var(--bg-dark), var(--bg-light));
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-            position: relative; overflow: hidden;
+            position: relative;
+            overflow: hidden;
             border: 5px solid var(--border);
             border-bottom: 10px solid var(--ground);
-            border-radius: 20px; transition: background 0.5s, border 0.5s;
+            border-radius: 20px;
+            transition: background 0.5s, border 0.5s;
+            display: flex; /* Adicionado para controlo interno */
+            flex-direction: column;
         }
         
         #game-container.shake { animation: screen-shake 0.2s; }
@@ -52,7 +64,9 @@
         .hud-item {
             background: rgba(0, 0, 0, 0.25); padding: 8px 15px; border-radius: 20px;
             border: 2px solid rgba(255, 255, 255, 0.3); display: flex;
-            align-items: center; font-size: 24px; color: white;
+            align-items: center; 
+            font-size: clamp(16px, 4vw, 24px); /* MELHORIA: Fonte adaptável */
+            color: white;
             text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
         }
         .hud-item span { margin-left: 8px; }
@@ -67,16 +81,18 @@
         }
         .screen.hidden { opacity: 0; visibility: hidden; }
         .screen h1 {
-            font-size: 60px; color: var(--primary-yellow);
+            font-size: clamp(40px, 12vw, 60px); /* MELHORIA: Fonte adaptável */
+            color: var(--primary-yellow);
             text-shadow: 4px 4px 0px var(--shadow-yellow), 0 0 30px var(--primary-yellow);
             margin-bottom: 20px; animation: bounce-in 1s ease-out;
         }
-        .screen h2 { font-size: 40px; margin-bottom: 20px; }
-        .screen p { font-size: 22px; margin-bottom: 15px; max-width: 350px; }
-        .screen .high-score, .screen .total-milk-display { font-size: 24px; color: var(--primary-yellow); margin: 10px 0 20px 0; text-shadow: 2px 2px 0 var(--shadow-yellow); }
-        .screen .final-stars { font-size: 60px; margin: 20px 0; letter-spacing: 10px; }
+        .screen h2 { font-size: clamp(30px, 8vw, 40px); margin-bottom: 20px; }
+        .screen p { font-size: clamp(16px, 4vw, 22px); margin-bottom: 15px; max-width: 350px; }
+        .screen .high-score, .screen .total-milk-display { font-size: clamp(18px, 5vw, 24px); color: var(--primary-yellow); margin: 10px 0 20px 0; text-shadow: 2px 2px 0 var(--shadow-yellow); }
+        .screen .final-stars { font-size: clamp(40px, 12vw, 60px); margin: 20px 0; letter-spacing: 10px; }
         .screen button {
-            font-family: 'Fredoka One', cursive; padding: 18px 40px; font-size: 24px;
+            font-family: 'Fredoka One', cursive; padding: 15px 30px; 
+            font-size: clamp(18px, 5vw, 24px); /* MELHORIA: Fonte adaptável */
             color: var(--text-dark); background: linear-gradient(180deg, var(--primary-yellow), var(--secondary-yellow));
             border: none; border-radius: 15px; border-bottom: 6px solid var(--shadow-yellow);
             cursor: pointer; transition: all 0.1s ease-in-out; margin-top: 10px;
@@ -87,7 +103,7 @@
         
         .menu-selection { display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center; }
         .menu-selection button { width: 80%; max-width: 350px; display: flex; justify-content: center; align-items: center; gap: 15px;}
-        .menu-selection button .icon { font-size: 30px; }
+        .menu-selection button .icon { font-size: clamp(24px, 6vw, 30px); }
         #theme-toggle-button { background: #3498db; border-bottom-color: #2980b9; color: white;}
         #choose-emoji-button { background: #9b59b6; border-bottom-color: #8e44ad; color: white;}
         
@@ -96,10 +112,7 @@
         #emoji-select-container { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
         
         #emoji-select-container .emoji-item { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; }
-        #emoji-select-container .emoji-button {
-            font-size: 48px; width: 100%; padding: 10px 0;
-            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px;
-        }
+        #emoji-select-container .emoji-button { font-size: 48px; width: 100%; padding: 10px 0; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; }
         #emoji-select-container .emoji-button.selected { border-color: var(--primary-yellow); box-shadow: 0 0 20px var(--primary-yellow); }
         .emoji-price { font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 5px; }
         .emoji-price.unlocked { color: #2ecc71; }
@@ -110,39 +123,15 @@
         .back-to-menu-button { margin-top: 40px; background: #7f8c8d; border-bottom-color: #606b6c; color: white;}
         
         /* Chefe e Comemorações */
-        #boss-container {
-            position: absolute;
-            top: 40px; 
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 80px; 
-            z-index: 20;
-            opacity: 0;
-            transition: opacity 0.5s;
-            pointer-events: none;
-        }
+        #boss-container { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 80px; z-index: 20; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
         #boss-container.visible { opacity: 1; }
-        
         #boss-health-bar { position: absolute; top: 110px; left: 10%; width: 80%; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 2px solid white; z-index: 10; padding: 2px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s; }
         #boss-health { width: 100%; height: 100%; background: linear-gradient(to right, #e74c3c, #c0392b); border-radius: 6px; transition: width 0.5s ease-out; }
         #boss-health-bar.visible { opacity: 1; }
-
-        #boss-arrival-text, #celebration-text {
-            position: absolute; top: 40%; left: 50%;
-            transform: translateX(-50%); font-size: 52px;
-            color: #e74c3c; text-shadow: 3px 3px 0 black;
-            z-index: 200; opacity: 0; pointer-events: none;
-        }
-        #celebration-text {
-            color: var(--primary-yellow);
-            text-shadow: 4px 4px 0px var(--shadow-yellow);
-        }
+        #boss-arrival-text { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 52px; color: #e74c3c; text-shadow: 3px 3px 0 black; z-index: 200; opacity: 0; pointer-events: none; }
         #boss-arrival-text.animate { animation: bounce-in 1.5s ease-out, fade-out 1.5s 2s forwards; }
-        #celebration-text.animate {
-            opacity: 1;
-            animation: bounce-in 1s ease-out;
-        }
 
+        /* MELHORIA: Ajuste da animação de celebração */
         @keyframes fade-out { to { opacity: 0; transform: translateX(-50%) scale(1.5); } }
         @keyframes screen-shake { 0% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, 5px); } 100% { transform: translate(0, 0); }}
         @keyframes bounce-in { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; }}
@@ -160,7 +149,6 @@
         <div id="boss-container" class="hidden">🐵</div>
         <div id="boss-health-bar"><div id="boss-health"></div></div>
         <div id="boss-arrival-text">O MACACO CHEGOU!</div>
-        <div id="celebration-text"></div>
         
         <!-- Telas de Menu -->
         <div id="main-menu" class="screen">
@@ -218,7 +206,6 @@
         const bossHealthBar = document.getElementById('boss-health-bar');
         const bossHealthFill = document.getElementById('boss-health');
         const bossArrivalText = document.getElementById('boss-arrival-text');
-        const celebrationText = document.getElementById('celebration-text');
         
         // --- Menus e Telas ---
         const mainMenu = document.getElementById('main-menu');
@@ -249,10 +236,7 @@
         // --- Variáveis de Estado do Jogo ---
         let player, items, score, lives, gameOver, itemSpawnInterval, gameLoopId, particles, stars, highScore = 0, totalMilk = 0;
         let gameMode, currentLevel, levelGoal, levelStars, isInvincible = false, invincibilityTimer = 0;
-        let isBossFightActive = false, bossState = {}, bossAttackInterval, bossSpecialItemInterval;
-        let nextCelebrationScore = 50;
-        let preloadedCelebration = null;
-        let isFetchingCelebration = false;
+        let isBossFightActive = false, bossState = {};
 
         // --- Constantes do Jogo ---
         const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
@@ -306,33 +290,6 @@
              totalMilkDisplays.forEach(el => el.textContent = `Leite Total: ${totalMilk}`);
         }
         
-        // --- FUNÇÃO DA API GEMINI ---
-        async function callGemini(prompt) {
-            const apiKey = ""; // Deixar em branco, o ambiente fornece
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
-                const result = await response.json();
-                
-                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
-                    return result.candidates[0].content.parts[0].text.replace(/["`]/g, '');
-                } else {
-                    console.error("Resposta da API inválida:", result);
-                    return "És uma máquina!"; // Fallback
-                }
-            } catch (error) {
-                console.error("Erro ao chamar a API Gemini:", error);
-                return "Que talento!"; // Fallback
-            }
-        }
-
         // --- LÓGICA DE MENUS ---
         function showScreen(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); if (screen) screen.classList.remove('hidden'); }
         
@@ -403,19 +360,6 @@
             }
         }
 
-        async function showCelebration() {
-            if (preloadedCelebration) {
-                const message = await preloadedCelebration;
-                celebrationText.textContent = message;
-                celebrationText.classList.add('animate');
-
-                setTimeout(() => {
-                    celebrationText.classList.remove('animate');
-                }, 10000); // Mostra a mensagem por 10 segundos
-                preloadedCelebration = null;
-            }
-        }
-
         // --- LÓGICA PRINCIPAL DO JOGO ---
         function initGame(mode) {
             gameMode = mode;
@@ -423,9 +367,6 @@
             lives = 3; gameOver = false; particles = []; items = [];
             isInvincible = false; invincibilityTimer = 0;
             isBossFightActive = false;
-            nextCelebrationScore = 50;
-            preloadedCelebration = null;
-            isFetchingCelebration = false;
             
             if (gameMode === 'levels') { levelGoal = LEVELS[currentLevel - 1].goal; levelStars = 3; } else { levelGoal = -1; }
             player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: canvas.height - PLAYER_SIZE - 20, width: PLAYER_SIZE, height: PLAYER_SIZE, speed: 8, bobble: 0, scaleX: 1, scaleY: 1 };
@@ -480,19 +421,7 @@
                     }
                     else if (item.type === 'milk') {
                         score++;
-                        
-                        if (score === 100 && !isBossFightActive) {
-                            startBossFight();
-                        } else if (score >= nextCelebrationScore && !isBossFightActive) {
-                            showCelebration();
-                            nextCelebrationScore += 50;
-                            isFetchingCelebration = false;
-                        } else if (score % 50 === 40 && !isFetchingCelebration && !isBossFightActive) {
-                            isFetchingCelebration = true;
-                            const prompt = "Gere uma frase de comemoração curta com um máximo de 8 palavras, engraçada e atrevida para um jogo, em português de Portugal. O tom deve ser inspirado nos exemplos: 'Bela mamada!', 'Que boca de veludo!', 'Chupador profissional'. Responda apenas com a frase.";
-                            preloadedCelebration = callGemini(prompt, null);
-                        }
-
+                        if (score === 100 && !isBossFightActive) startBossFight();
                         createParticles(item.x, item.y, 'white', 25);
                         if (gameMode === 'levels' && score >= levelGoal) levelComplete();
                     } else if (item.type === 'obstacle' || item.type === 'banana') {
@@ -658,4 +587,4 @@
 
     </script>
 </body>
-</html>
+</ht
