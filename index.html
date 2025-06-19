@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mateus e o Leite de Macho</title>
+    <title>Sirilo e o Leite de Macho</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
@@ -125,6 +125,8 @@
         /* Chefe e Comemorações */
         #boss-container { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 80px; z-index: 20; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
         #boss-container.visible { opacity: 1; }
+        #boss-container.throw { animation: boss-throw 0.3s ease-out; }
+
         #boss-health-bar { position: absolute; top: 110px; left: 10%; width: 80%; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 2px solid white; z-index: 10; padding: 2px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s; }
         #boss-health { width: 100%; height: 100%; background: linear-gradient(to right, #e74c3c, #c0392b); border-radius: 6px; transition: width 0.5s ease-out; }
         #boss-health-bar.visible { opacity: 1; }
@@ -135,6 +137,7 @@
         @keyframes fade-out { to { opacity: 0; transform: translateX(-50%) scale(1.5); } }
         @keyframes screen-shake { 0% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, 5px); } 100% { transform: translate(0, 0); }}
         @keyframes bounce-in { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; }}
+        @keyframes boss-throw { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.2) rotate(-5deg); } 100% { transform: translateX(-50%) scale(1); } }
 
     </style>
 </head>
@@ -190,6 +193,7 @@
             <p class="high-score"></p>
             <button id="restart-button">Tentar Novamente</button>
             <button class="level-select-button">Escolher Fase</button>
+            <button class="back-to-menu-button">Menu Principal</button>
         </div>
     </div>
 
@@ -237,9 +241,10 @@
         let player, items, score, lives, gameOver, itemSpawnInterval, gameLoopId, particles, stars, highScore = 0, totalMilk = 0;
         let gameMode, currentLevel, levelGoal, levelStars, isInvincible = false, invincibilityTimer = 0;
         let isBossFightActive = false, bossState = {};
+        let temporaryPlayerEmoji = null;
 
         // --- Constantes do Jogo ---
-        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
+        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '�': 300, '😼': 500 };
         const PLAYER_EMOJIS = Object.keys(EMOJI_PRICES);
         let unlockedEmojis = ['😏'];
         let PLAYER_EMOJI = '😏';
@@ -400,6 +405,19 @@
             gameLoopId = requestAnimationFrame(gameLoop);
         }
         
+        function triggerPlayerAnimation(type) {
+            if (type === 'collect') {
+                temporaryPlayerEmoji = '😋';
+            } else if (type === 'damage') {
+                temporaryPlayerEmoji = '😵';
+                player.damageFlash = 10;
+            }
+
+            setTimeout(() => {
+                temporaryPlayerEmoji = null;
+            }, 300);
+        }
+
         function updateItems() {
             const speedMultiplier = 1 + Math.floor(score / 50) * 0.05;
             for (let i = items.length - 1; i >= 0; i--) {
@@ -421,12 +439,14 @@
                     }
                     else if (item.type === 'milk') {
                         score++;
+                        triggerPlayerAnimation('collect');
                         if (score === 100 && !isBossFightActive) startBossFight();
                         createParticles(item.x, item.y, 'white', 25);
                         if (gameMode === 'levels' && score >= levelGoal) levelComplete();
                     } else if (item.type === 'obstacle' || item.type === 'banana') {
                         if (!isInvincible) {
                             lives--;
+                            triggerPlayerAnimation('damage');
                             if (gameMode === 'levels') levelStars = Math.max(1, levelStars - 1);
                              const particleColor = item.type === 'obstacle' ? '#8e44ad' : 'yellow';
                             createParticles(item.x, item.y, particleColor, 35);
@@ -504,6 +524,12 @@
             updateUIDisplays();
             finalScoreElement.textContent = `Apanhaste ${score} leitadas.`;
             showScreen(gameOverScreen);
+            
+            if (gameMode === 'infinite') {
+                gameOverScreen.querySelector('.level-select-button').style.display = 'none';
+            } else {
+                gameOverScreen.querySelector('.level-select-button').style.display = 'block';
+            }
         }
         
         function levelComplete() {
@@ -527,7 +553,30 @@
         function drawStars(playerSpeedX) { stars.forEach(star => { star.x -= playerSpeedX * star.parallax * 0.1; if (star.x < 0) star.x = canvas.width; if (star.x > canvas.width) star.x = 0; const flicker = Math.sin(Date.now() * 0.002 + star.x) * 0.2 + 0.8; ctx.fillStyle = `rgba(255, 255, 255, ${flicker})`; ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill(); }); }
         function createParticles(x, y, color, count) { particles = particles || []; Array.from({length: count}).forEach(() => particles.push({ x, y, color, size: Math.random() * 6 + 2, speedX: (Math.random() - 0.5) * 6, speedY: (Math.random() - 0.5) * 6, life: 40 })); }
         function updateAndDrawParticles() { for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.speedX; p.y += p.speedY; p.speedY += 0.1; p.life--; if (p.life <= 0) { particles.splice(i, 1); } else { ctx.fillStyle = p.color; ctx.globalAlpha = p.life / 40; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1.0; } } }
-        function drawPlayer() { if (!player) return; player.bobble += 0.1; const yOffset = Math.sin(player.bobble) * 3; ctx.save(); ctx.translate(player.x + player.width / 2, player.y + player.height + yOffset); ctx.scale(player.scaleX, player.scaleY); if (isInvincible) { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } else { ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 15; } ctx.font = `${PLAYER_SIZE}px sans-serif`; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 8; ctx.fillText(PLAYER_EMOJI, -player.width / 2, 0); ctx.restore(); player.scaleX += (1 - player.scaleX) * 0.2; player.scaleY += (1 - player.scaleY) * 0.2; }
+        
+        function drawPlayer() { 
+            if (!player) return; 
+            player.bobble += 0.1; 
+            const yOffset = Math.sin(player.bobble) * 3; 
+            ctx.save(); 
+            ctx.translate(player.x + player.width / 2, player.y + player.height + yOffset); 
+            ctx.scale(player.scaleX, player.scaleY); 
+            
+            if (isInvincible) { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } 
+            else if (player.damageFlash > 0) {
+                 ctx.shadowColor = "red"; ctx.shadowBlur = 20;
+                 player.damageFlash--;
+            }
+            else { ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 15; }
+
+            ctx.font = `${PLAYER_SIZE}px sans-serif`; 
+            ctx.shadowOffsetX = 0; 
+            ctx.shadowOffsetY = 8; 
+            ctx.fillText(temporaryPlayerEmoji || PLAYER_EMOJI, -player.width / 2, 0); 
+            ctx.restore(); 
+            player.scaleX += (1 - player.scaleX) * 0.2; 
+            player.scaleY += (1 - player.scaleY) * 0.2; 
+        }
         
         function drawItems() { ctx.font = `${ITEM_SIZE}px sans-serif`; for (const item of items) { let emoji; if(item.type === 'hit-projectile') emoji = MILK_EMOJI; else if (item.type === 'milk') emoji = MILK_EMOJI; else if (item.type === 'obstacle') emoji = OBSTACLE_EMOJI; else if (item.type === 'banana') emoji = BANANA_EMOJI; else emoji = SHIELD_EMOJI; const pulse = item.type === 'glowing-milk' ? 1.5 + Math.sin(Date.now()*0.01)*0.3 : 1; ctx.save(); ctx.translate(item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2); if (item.type === 'shield' || item.type === 'glowing-milk') { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } ctx.scale(pulse, pulse); ctx.rotate(item.rotation); ctx.fillText(emoji, -ITEM_SIZE / 2, ITEM_SIZE / 2); ctx.restore(); } }
         
@@ -538,6 +587,8 @@
             if (typeOverride) {
                 type = typeOverride;
                 if(type === 'banana'){
+                    bossContainer.classList.add('throw');
+                    setTimeout(() => bossContainer.classList.remove('throw'), 300);
                     const bossX = bossContainer.offsetLeft + bossContainer.offsetWidth / 2;
                     const bossY = bossContainer.offsetTop + bossContainer.offsetHeight / 2;
 
@@ -587,4 +638,5 @@
 
     </script>
 </body>
-</ht
+</html>
+�
