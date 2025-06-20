@@ -107,16 +107,16 @@
         #achievements-button { background: #3498db; border-bottom-color: #2980b9; color: white;}
         #choose-emoji-button { background: #9b59b6; border-bottom-color: #8e44ad; color: white;}
         
-        /* Loja, Upgrades, Conquistas, Ranking */
+        /* Loja, Upgrades, Conquistas */
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 350px; margin-bottom: 20px;}
-        .list-container { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 380px; }
-        .emoji-item, .upgrade-item, .achievement-item, .rank-item { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; }
+        .emoji-item, .upgrade-item, .achievement-item { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; }
         
         .emoji-button { font-size: 48px; width: 100%; padding: 10px 0; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; }
         .emoji-button.selected { border-color: var(--primary-yellow); box-shadow: 0 0 20px var(--primary-yellow); }
         .price { font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 5px; }
         .price.unlocked { color: #2ecc71; }
         
+        .upgrade-container, .achievement-container { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 380px; }
         .upgrade-item { display: grid; grid-template-columns: 1fr auto; align-items: center; text-align: left; padding: 15px; }
         .upgrade-info strong { display: block; font-size: 20px; }
         .upgrade-info .level { font-size: 14px; opacity: 0.8; }
@@ -127,10 +127,6 @@
         .achievement-icon { font-size: 40px; }
         .achievement-info strong { display: block; }
         .achievement-info span { font-size: 14px; opacity: 0.8; }
-        
-        .rank-item { display: grid; grid-template-columns: 40px 1fr 80px; align-items: center; text-align: left; padding: 10px 15px; font-size: 20px; }
-        .rank-item span:first-child { font-weight: bold; }
-        .rank-item span:last-child { text-align: right; font-weight: bold; color: var(--primary-yellow); }
         
         .back-to-menu-button { margin-top: 40px; background: #7f8c8d; border-bottom-color: #606b6c; color: white;}
         
@@ -186,12 +182,7 @@
                 <button id="achievements-button"><span class="icon">🏅</span>Conquistas</button>
                 <button id="choose-emoji-button"><span class="icon">😀</span>Loja de Emoji</button>
             </div>
-            <div class="leaderboard-container">
-                <h2>🏆 Top 3 Mamadores 🏆</h2>
-                <div id="leaderboard" class="list-container">
-                    <p>A carregar ranking...</p>
-                </div>
-            </div>
+            <p class="high-score" style="margin-top: 20px;">Recorde Infinito: 0</p>
         </div>
 
         <div id="level-select-screen" class="screen hidden">
@@ -237,19 +228,13 @@
             <button class="back-to-menu-button">Menu Principal</button>
         </div>
     </div>
-    
-    <script type="module">
-        // Importações do Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Variáveis Globais do Jogo ---
+    <script>
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         const gameContainer = document.getElementById('game-container');
 
-        // Elementos da UI
+        // --- Elementos da UI ---
         const uiContainer = document.getElementById('ui-container');
         const scoreElement = document.querySelector('#score span');
         const livesElement = document.querySelector('#lives span');
@@ -261,7 +246,7 @@
         const bossArrivalText = document.getElementById('boss-arrival-text');
         const celebrationText = document.getElementById('celebration-text');
         
-        // Menus e Telas
+        // --- Menus e Telas ---
         const mainMenu = document.getElementById('main-menu');
         const levelSelectScreen = document.getElementById('level-select-screen');
         const levelSelectContainer = document.getElementById('level-select-container');
@@ -277,9 +262,8 @@
         const finalStarsElement = document.querySelector('#level-complete-screen .final-stars');
         const highScoreDisplays = document.querySelectorAll('.high-score');
         const totalMilkDisplays = document.querySelectorAll('.total-milk-display');
-        const leaderboardContainer = document.getElementById('leaderboard');
         
-        // Botões
+        // --- Botões ---
         const modeButtons = document.querySelectorAll('.menu-selection button[data-mode]');
         const chooseEmojiButton = document.getElementById('choose-emoji-button');
         const upgradesButton = document.getElementById('upgrades-button');
@@ -305,10 +289,6 @@
         let nextCelebrationScore = 50;
         let nextBossScore = 100;
 
-        // --- Variáveis do Firebase ---
-        let db, auth;
-        let userId;
-
         // --- Constantes do Jogo ---
         const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
         const PLAYER_EMOJIS = Object.keys(EMOJI_PRICES);
@@ -320,7 +300,7 @@
         const SHIELD_EMOJI = '🐅';
         const GLOWING_MILK_EMOJI = '✨';
         const HEART_EMOJI = '💖';
-        const GOLDEN_MILK_EMOJI = '�';
+        const GOLDEN_MILK_EMOJI = '🌟';
         const MAGNET_EMOJI = '🧲';
         const SLOW_EMOJI = '🐌';
         
@@ -336,50 +316,36 @@
         let highestLevelUnlocked = 1;
         
         const CELEBRATION_MESSAGES = ["Bela mamada!", "Que boca de veludo!", "Eita que delícia!", "Chupador profissional!", "A Cleide sem calcinha!", "Engole tudo!", "Boca de aspirador!", "Garganta de ouro!", "Nem piscou!", "Fez render!", "Talento nato!", "O rei da chupeta!", "Aceita tudo!", "Isso é que é gozo!", "Mandou bem!", "És o maior!"];
-
-        // --- GESTÃO DE DADOS (Firebase) ---
-        async function loadData() {
-            if (!userId) return;
-            const docRef = doc(db, "artifacts", appId, "users", userId);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                highScore = data.highScore || 0;
-                totalMilk = data.totalMilk || 0;
-                highestLevelUnlocked = data.highestLevelUnlocked || 1;
-                PLAYER_EMOJI = data.playerEmoji || '😏';
-                unlockedEmojis = data.unlockedEmojis || ['😏'];
-            } else {
-                await saveData(true);
+        
+        // --- GESTÃO DE DADOS (localStorage) ---
+        function loadData() {
+            highScore = parseInt(localStorage.getItem('infiniteHighScore') || '0', 10);
+            totalMilk = parseInt(localStorage.getItem('totalMilk') || '0', 10);
+            highestLevelUnlocked = parseInt(localStorage.getItem('highestLevelUnlocked') || '1', 10);
+            PLAYER_EMOJI = localStorage.getItem('playerEmoji') || '😏';
+            unlockedEmojis = JSON.parse(localStorage.getItem('unlockedEmojis') || '["😏"]');
+            
+            const savedTheme = localStorage.getItem('gameTheme');
+            if (savedTheme) {
+                gameContainer.className = savedTheme;
             }
             updateUIDisplays();
         }
 
-        async function saveData(isNewUser = false) {
-            if (!userId) return;
-            const dataToSave = {
-                highScore,
-                totalMilk,
-                highestLevelUnlocked,
-                playerEmoji: PLAYER_EMOJI,
-                unlockedEmojis,
-            };
-            await setDoc(doc(db, "artifacts", appId, "users", userId), dataToSave);
-            
-            if (!isNewUser && gameMode === 'infinite' && score > 0) {
-                 const rankRef = doc(db, "artifacts", appId, "public/data/leaderboard", userId);
-                 const rankDoc = await getDoc(rankRef);
-                 if(!rankDoc.exists() || score > rankDoc.data().score) {
-                    await setDoc(rankRef, { score, name: PLAYER_EMOJI });
-                 }
+        function saveData() {
+            if (gameMode === 'infinite' && score > highScore) {
+                highScore = score;
+                localStorage.setItem('infiniteHighScore', highScore);
             }
+            localStorage.setItem('totalMilk', totalMilk);
+            localStorage.setItem('unlockedEmojis', JSON.stringify(unlockedEmojis));
         }
-        
+
         function unlockNextLevel() {
              if (gameMode === 'levels' && currentLevel === highestLevelUnlocked && currentLevel < LEVELS.length) {
                 highestLevelUnlocked++;
-             }
+                localStorage.setItem('highestLevelUnlocked', highestLevelUnlocked);
+            }
         }
         
         function updateUIDisplays() {
@@ -390,18 +356,84 @@
         // --- LÓGICA DE MENUS ---
         function showScreen(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); if (screen) screen.classList.remove('hidden'); }
         
-        function populateLevelSelect() { /* ...código inalterado... */ }
-        function populateEmojiSelect() { /* ...código inalterado... */ }
-        function buyEmoji(emoji, price) { /* ...código inalterado... */ }
-        function showCelebration() { /* ...código inalterado... */ }
+        function populateLevelSelect() {
+            levelSelectContainer.innerHTML = '';
+            for (let i = 1; i <= LEVELS.length; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.dataset.level = i;
+                if (i > highestLevelUnlocked) {
+                    button.classList.add('locked');
+                } else {
+                    button.addEventListener('click', () => { currentLevel = i; initGame('levels'); });
+                }
+                levelSelectContainer.appendChild(button);
+            }
+        }
+        
+        function populateEmojiSelect() {
+            emojiSelectContainer.innerHTML = '';
+            PLAYER_EMOJIS.forEach(emoji => {
+                const isUnlocked = unlockedEmojis.includes(emoji);
+                const price = EMOJI_PRICES[emoji];
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'emoji-item';
+
+                const button = document.createElement('button');
+                button.className = 'emoji-button';
+                button.textContent = emoji;
+                if (emoji === PLAYER_EMOJI) button.classList.add('selected');
+
+                const priceDiv = document.createElement('div');
+                priceDiv.className = 'emoji-price';
+
+                if (isUnlocked) {
+                    priceDiv.textContent = '✔️';
+                    priceDiv.classList.add('unlocked');
+                    button.addEventListener('click', () => {
+                        PLAYER_EMOJI = emoji;
+                        localStorage.setItem('playerEmoji', emoji);
+                        populateEmojiSelect();
+                    });
+                } else {
+                    priceDiv.innerHTML = `🥛 <span>${price}</span>`;
+                    if (totalMilk >= price) {
+                        button.addEventListener('click', () => buyEmoji(emoji, price));
+                    } else {
+                        button.disabled = true;
+                    }
+                }
+
+                itemDiv.appendChild(button);
+                itemDiv.appendChild(priceDiv);
+                emojiSelectContainer.appendChild(itemDiv);
+            });
+        }
+        
+        function buyEmoji(emoji, price) {
+            if (totalMilk >= price) {
+                totalMilk -= price;
+                unlockedEmojis.push(emoji);
+                PLAYER_EMOJI = emoji;
+                localStorage.setItem('playerEmoji', emoji);
+                saveData();
+                updateUIDisplays();
+                populateEmojiSelect();
+            }
+        }
+
+        function showCelebration() {
+            const message = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)];
+            celebrationText.textContent = message;
+            celebrationText.classList.add('animate');
+            setTimeout(() => {
+                celebrationText.classList.remove('animate');
+            }, 3000); // Duração da animação
+        }
 
         // --- LÓGICA PRINCIPAL DO JOGO ---
         function initGame(mode) {
-            const themes = ['theme-night', 'theme-day', 'theme-hell', 'theme-candy', 'theme-forest', 'theme-space'];
-            const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-            gameContainer.className = randomTheme;
-            localStorage.setItem('gameTheme', randomTheme);
-
             gameMode = mode;
             score = 0; 
             lives = 3; gameOver = false; particles = []; items = [];
@@ -413,7 +445,7 @@
             nextBossScore = 100;
             
             if (gameMode === 'levels') { levelGoal = LEVELS[currentLevel - 1].goal; levelStars = 3; } else { levelGoal = -1; }
-            player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: canvas.height - PLAYER_SIZE - 20, width: PLAYER_SIZE, height: PLAYER_SIZE, speed: 6, bobble: 0, scaleX: 1, scaleY: 1 };
+            player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: canvas.height - PLAYER_SIZE - 20, width: PLAYER_SIZE, height: PLAYER_SIZE, speed: 6, bobble: 0, scaleX: 1, scaleY: 1 }; // Velocidade inicial reduzida
             if (!stars) createStars();
 
             updateUI();
@@ -453,12 +485,128 @@
             gameLoopId = requestAnimationFrame(gameLoop);
         }
         
-        function triggerPlayerAnimation(type) { /* ...código inalterado... */ }
-        function resetCombo() { /* ...código inalterado... */ }
-        function updateItems() { /* ...código inalterado... */ }
-        function startBossFight() { /* ...código inalterado... */ }
-        function updateBoss() { /* ...código inalterado... */ }
-        function endBossFight() { /* ...código inalterado... */ }
+        function triggerPlayerAnimation(type) {
+            if (type === 'collect') { temporaryPlayerEmoji = '😋'; } 
+            else if (type === 'damage') {
+                temporaryPlayerEmoji = '😵';
+                player.damageFlash = 10;
+                const livesHud = document.querySelector('#lives');
+                livesHud.classList.add('pulsate');
+                setTimeout(() => livesHud.classList.remove('pulsate'), 500);
+            }
+            setTimeout(() => { temporaryPlayerEmoji = null; }, 300);
+        }
+        
+        function resetCombo() {
+            combo.count = 0;
+            combo.multiplier = 1;
+            comboDisplay.style.display = 'none';
+        }
+
+        function updateItems() {
+            const speedMultiplier = 1 + Math.floor(score / 50) * 0.05;
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+
+                if (item.type === 'projectile') { item.x += item.speedX; item.y += item.speedY; } 
+                else {
+                    if (magnetTimer > 0 && (item.type === 'milk' || item.type === 'golden-milk')) {
+                        const dx = (player.x + player.width / 2) - (item.x + ITEM_SIZE / 2);
+                        item.x += dx * 0.05;
+                    }
+                    item.y += item.speed * speedMultiplier;
+                }
+
+                if (item.y + ITEM_SIZE > player.y && item.y < player.y + player.height && item.x + ITEM_SIZE > player.x && item.x < player.x + player.width) {
+                    if (item.type === 'shield') { isInvincible = true; invincibilityTimer = 180; score += 2; triggerPlayerAnimation('collect'); createParticles(item.x, item.y, 'gold', 40); } 
+                    else if (item.type === 'heart') { if (lives < 3) lives++; createParticles(item.x, item.y, 'pink', 30); }
+                    else if (item.type === 'golden-milk') { goldenMilkTimer = 300; createParticles(item.x, item.y, 'gold', 50); }
+                    else if (item.type === 'magnet') { magnetTimer = 300; createParticles(item.x, item.y, '#8e44ad', 40); }
+                    else if (item.type === 'glowing-milk') { bossState.health--; createParticles(player.x, player.y, 'cyan', 30); items.push({ x: player.x, y: player.y, type: 'hit-projectile' }); }
+                    else if (item.type === 'milk') {
+                        const pointsToAdd = goldenMilkTimer > 0 ? 2 * combo.multiplier : 1 * combo.multiplier;
+                        score += pointsToAdd;
+                        combo.count++;
+                        if (combo.count >= 5) combo.multiplier = 2;
+                        if (combo.count >= 10) combo.multiplier = 3;
+                        comboDisplay.style.display = 'flex';
+                        comboMultiplierSpan.textContent = `x${combo.multiplier}`;
+                        triggerPlayerAnimation('collect');
+                        if (score >= nextBossScore && !isBossFightActive) {
+                            startBossFight();
+                        } else if (score >= nextCelebrationScore && !isBossFightActive) {
+                            showCelebration();
+                            nextCelebrationScore += 50;
+                        }
+                        createParticles(item.x, item.y, 'white', 25);
+                        if (gameMode === 'levels' && score >= levelGoal) levelComplete();
+                    } else if (item.type === 'obstacle' || item.type === 'projectile' || item.type === 'slow') {
+                        if (!isInvincible) {
+                            lives--;
+                            resetCombo();
+                            triggerPlayerAnimation('damage');
+                            if (item.type === 'slow') slowedTimer = 300;
+                            if (gameMode === 'levels') levelStars = Math.max(1, levelStars - 1);
+                            const particleColor = item.type === 'obstacle' ? '#8e44ad' : (item.type === 'projectile' ? bossState.projectileColor : 'cyan');
+                            createParticles(item.x, item.y, particleColor, 35);
+                            gameContainer.classList.add('shake');
+                            setTimeout(() => gameContainer.classList.remove('shake'), 200);
+                        } else { createParticles(item.x, item.y, 'lightgray', 15); }
+                    }
+                    if (item.type !== 'hit-projectile') items.splice(i, 1);
+                    updateUI();
+                    if (lives <= 0) endGame();
+                    continue;
+                }
+                
+                if(item.type === 'hit-projectile') {
+                    const bossYPos = bossContainer.offsetTop + bossContainer.offsetHeight;
+                    item.y -= 20;
+                    if(item.y < bossYPos) {
+                        createParticles(bossContainer.offsetLeft + bossContainer.offsetWidth / 2, bossYPos, 'red', 50);
+                        items.splice(i, 1);
+                    }
+                }
+                
+                if (item.y > canvas.height) { if(item.type === 'milk') resetCombo(); items.splice(i, 1); }
+            }
+        }
+        
+        function startBossFight() {
+            isBossFightActive = true;
+            const currentBossIndex = Math.floor((nextBossScore / 100) - 1) % BOSSES.length;
+            const currentBoss = BOSSES[currentBossIndex];
+
+            bossArrivalText.textContent = `O ${currentBoss.name} CHEGOU!`;
+            bossContainer.textContent = currentBoss.emoji;
+            bossArrivalText.classList.add('animate');
+            bossArrivalText.addEventListener('animationend', () => bossArrivalText.classList.remove('animate'), {once: true});
+            clearInterval(itemSpawnInterval);
+            bossState = { health: 5, maxHealth: 5, ...currentBoss };
+            bossContainer.classList.add('visible');
+            bossHealthBar.classList.add('visible');
+            bossAttackInterval = setInterval(() => { if(!gameOver) spawnItem('projectile'); }, 2000);
+            bossSpecialItemInterval = setInterval(() => { if(!gameOver) spawnItem('glowing-milk'); }, 3000);
+        }
+
+        function updateBoss() {
+            bossHealthFill.style.width = `${(bossState.health / bossState.maxHealth) * 100}%`;
+            if(bossState.health <= 0) endBossFight();
+        }
+        
+        function endBossFight() {
+            isBossFightActive = false;
+            nextBossScore += 100;
+            const bossRect = bossContainer.getBoundingClientRect();
+            createParticles(bossRect.left + bossRect.width/2, bossRect.top + bossRect.height/2, 'gold', 150);
+            bossContainer.classList.remove('visible');
+            bossHealthBar.classList.remove('visible');
+            clearInterval(bossAttackInterval);
+            clearInterval(bossSpecialItemInterval);
+            itemSpawnInterval = setInterval(spawnItem, 800);
+            score += 250;
+            updateUI();
+        }
 
         function endGame() {
             gameOver = true;
@@ -497,14 +645,69 @@
             livesElement.textContent = lives;
         }
         
-        // --- FUNÇÕES DE DESENHO (INALTERADAS) ---
-        function createStars() { /* ... */ }
-        function drawStars(playerSpeedX) { /* ... */ }
-        function createParticles(x, y, color, count) { /* ... */ }
-        function updateAndDrawParticles() { /* ... */ }
-        function drawPlayer() { /* ... */ }
-        function drawItems() { /* ... */ }
-        function spawnItem(typeOverride = null) { /* ... */ }
+        function createStars() { stars = Array.from({length: 150}, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5, parallax: 0.2 + Math.random() * 0.8 })); }
+        function drawStars(playerSpeedX) { stars.forEach(star => { star.x -= playerSpeedX * star.parallax * 0.1; if (star.x < 0) star.x = canvas.width; if (star.x > canvas.width) star.x = 0; const flicker = Math.sin(Date.now() * 0.002 + star.x) * 0.2 + 0.8; ctx.fillStyle = `rgba(255, 255, 255, ${flicker})`; ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill(); }); }
+        function createParticles(x, y, color, count) { particles = particles || []; Array.from({length: count}).forEach(() => particles.push({ x, y, color, size: Math.random() * 6 + 2, speedX: (Math.random() - 0.5) * 6, speedY: (Math.random() - 0.5) * 6, life: 40 })); }
+        function updateAndDrawParticles() { for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.speedX; p.y += p.speedY; p.speedY += 0.1; p.life--; if (p.life <= 0) { particles.splice(i, 1); } else { ctx.fillStyle = p.color; ctx.globalAlpha = p.life / 40; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1.0; } } }
+        
+        function drawPlayer() { 
+            if (!player) return; 
+            player.bobble += 0.1; 
+            const yOffset = Math.sin(player.bobble) * 3; 
+            ctx.save(); 
+            ctx.translate(player.x + player.width / 2, player.y + player.height + yOffset); 
+            ctx.scale(player.scaleX, player.scaleY); 
+            
+            if (isInvincible) { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } 
+            else if (player.damageFlash > 0) {
+                 ctx.shadowColor = "red"; ctx.shadowBlur = 20;
+                 player.damageFlash--;
+            }
+            else if (slowedTimer > 0) {
+                ctx.shadowColor = "cyan"; ctx.shadowBlur = 15;
+            }
+            else { ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 15; }
+
+            ctx.font = `${PLAYER_SIZE}px sans-serif`; 
+            ctx.shadowOffsetX = 0; 
+            ctx.shadowOffsetY = 8; 
+            ctx.fillText(temporaryPlayerEmoji || PLAYER_EMOJI, -player.width / 2, 0); 
+            ctx.restore(); 
+            player.scaleX += (1 - player.scaleX) * 0.2; 
+            player.scaleY += (1 - player.scaleY) * 0.2; 
+        }
+        
+        function drawItems() { ctx.font = `${ITEM_SIZE}px sans-serif`; for (const item of items) { let emoji; if(item.type === 'hit-projectile') emoji = MILK_EMOJI; else if (item.type === 'milk') emoji = MILK_EMOJI; else if (item.type === 'obstacle') emoji = OBSTACLE_EMOJI; else if (item.type === 'projectile') emoji = bossState.projectile; else if (item.type === 'heart') emoji = HEART_EMOJI; else if (item.type === 'slow') emoji = SLOW_EMOJI; else if (item.type === 'magnet') emoji = MAGNET_EMOJI; else if (item.type === 'golden-milk') emoji = GOLDEN_MILK_EMOJI; else emoji = SHIELD_EMOJI; const pulse = item.type === 'glowing-milk' || item.type === 'golden-milk' ? 1.5 + Math.sin(Date.now()*0.01)*0.3 : 1; ctx.save(); ctx.translate(item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2); if (item.type === 'shield' || item.type === 'glowing-milk' || item.type === 'heart' || item.type === 'golden-milk') { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } ctx.scale(pulse, pulse); ctx.rotate(item.rotation); ctx.fillText(emoji, -ITEM_SIZE / 2, ITEM_SIZE / 2); ctx.restore(); } }
+        
+        function spawnItem(typeOverride = null) {
+            const x = Math.random() * (canvas.width - ITEM_SIZE);
+            let type, speed = 2.5 + Math.random() * 3.5;
+            
+            if (typeOverride) {
+                type = typeOverride;
+                if(type === 'projectile'){
+                    bossContainer.classList.add('throw');
+                    setTimeout(() => bossContainer.classList.remove('throw'), 300);
+                    const bossX = bossContainer.offsetLeft + bossContainer.offsetWidth / 2;
+                    const bossY = bossContainer.offsetTop + bossContainer.offsetHeight / 2;
+                    const dx = player.x - bossX;
+                    const dy = player.y - bossY;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    items.push({ x: bossX, y: bossY, speedX: (dx/dist)*5, speedY: (dy/dist)*5, type: 'projectile'});
+                    return;
+                }
+            } else {
+                const rand = Math.random(); 
+                if (rand < 0.02) { type = 'golden-milk'; }
+                else if (rand < 0.05) { type = 'magnet'; }
+                else if (rand < 0.08) { type = 'shield'; }       
+                else if (rand < 0.12 && score >= 50) { type = 'heart'; }  
+                else if (rand < 0.70) { type = 'milk'; } 
+                else if (rand < 0.85) { type = 'slow'; }
+                else { type = 'obstacle'; }                 
+            }
+             items.push({ x, y: -ITEM_SIZE, speed, type, rotation: Math.random() * Math.PI * 2, rotationSpeed: (Math.random() - 0.5) * 0.1 });
+        }
 
         const keys = {};
         window.addEventListener('keydown', (e) => keys[e.key] = true);
@@ -518,11 +721,12 @@
         modeButtons.forEach(button => { button.addEventListener('click', () => { const mode = button.dataset.mode; if (mode === 'infinite') { initGame('infinite'); } else { populateLevelSelect(); showScreen(levelSelectScreen); } }); });
         chooseEmojiButton.addEventListener('click', () => { populateEmojiSelect(); showScreen(emojiSelectScreen); });
         
+        // FIX: Adiciona verificações para os botões que podem não existir
         if (upgradesButton) {
-            upgradesButton.addEventListener('click', () => { /* A ser implementado */ showScreen(upgradesScreen); });
+            upgradesButton.addEventListener('click', () => { showScreen(upgradesScreen); });
         }
         if (achievementsButton) {
-            achievementsButton.addEventListener('click', () => { /* A ser implementado */ showScreen(achievementsScreen); });
+            achievementsButton.addEventListener('click', () => { showScreen(achievementsScreen); });
         }
         
         backToMenuButtons.forEach(button => { button.addEventListener('click', () => showScreen(mainMenu)); });
@@ -530,52 +734,11 @@
         restartButton.addEventListener('click', () => { initGame(gameMode); });
         nextLevelButton.addEventListener('click', () => { currentLevel++; initGame('levels'); });
         
-        // --- INICIALIZAÇÃO DO FIREBASE E DO JOGO ---
-        async function initApp() {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'sirilo-leite-de-macho-default';
-            const firebaseConfig = typeof __firebase_config !== 'undefined'
-                ? JSON.parse(__firebase_config)
-                : { apiKey: "your-mock-api-key", authDomain: "your-mock-auth-domain.firebaseapp.com", projectId: "your-mock-project-id" };
-
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser.uid;
-
-                await loadData();
-                listenToLeaderboard();
-                handleMovement();
-
-            } catch (error) {
-                console.error("Falha ao inicializar o Firebase. O jogo funcionará no modo offline.", error);
-                loadData(); 
-                handleMovement();
-            }
-        }
-        
-        function listenToLeaderboard() {
-            if (!db) return;
-            const q = query(collection(db, "artifacts", appId, "public/data/leaderboard"), orderBy("score", "desc"), limit(3));
-            onSnapshot(q, (snapshot) => {
-                const leaderboardHTML = snapshot.docs.map((doc, index) => {
-                    const data = doc.data();
-                    const rankEmoji = ["🥇", "🥈", "🥉"][index] || `${index + 1}.`;
-                    return `<div class="rank-item"><span>${rankEmoji}</span><span>${data.name}</span><span>${data.score}</span></div>`;
-                }).join('');
-                leaderboardContainer.innerHTML = leaderboardHTML || '<p>O ranking está vazio. Sê o primeiro!</p>';
-            });
-        }
-        
-        initApp();
+        // Inicia tudo
+        loadData();
+        handleMovement();
 
     </script>
 </body>
 </html>
-�
+
