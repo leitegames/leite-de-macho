@@ -14,62 +14,59 @@
             --shadow-yellow: #c78f00;
             --text-dark: #3d2b00;
             
-            /* Tema Noite (Padrão) */
+            /* Tema Padrão */
             --bg-dark: #141e30;
             --bg-light: #243b55;
             --ground: #27ae60;
             --border: #fff;
         }
 
-        /* --- MELHORIA: Estilos para garantir portabilidade e responsividade --- */
+        /* --- Estilos para Temas --- */
+        .theme-day { --bg-dark: #4e7eff; --bg-light: #81c7ff; --ground: #2ecc71; --border: #fff; }
+        .theme-hell { --bg-dark: #410a0a; --bg-light: #b91c1c; --ground: #93330b; --border: #ff8c00; }
+        .theme-candy { --bg-dark: #f9a8d4; --bg-light: #f472b6; --ground: #ec4899; --border: #fff; }
+        .theme-forest { --bg-dark: #064e3b; --bg-light: #059669; --ground: #84cc16; --border: #f0fdf4; }
+        .theme-space { --bg-dark: #1e1b4b; --bg-light: #4f46e5; --ground: #6d28d9; --border: #a78bfa; }
+
         html, body {
             margin: 0; padding: 0; font-family: 'Fredoka One', cursive;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Previne o scroll da página */
-            background-color: #0c0c1e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            touch-action: none; /* Previne zoom e scroll com o toque no telemóvel */
+            width: 100%; height: 100%; overflow: hidden;
+            background-color: #0c0c1e; display: flex;
+            justify-content: center; align-items: center; touch-action: none;
         }
 
         #game-container {
-            width: 100%;
-            height: 100%;
-            max-width: 500px; /* Mantém a proporção em ecrãs largos */
-            max-height: 100vh; /* Garante que nunca é maior que o ecrã */
+            width: 100%; height: 100%;
+            max-width: 500px; max-height: 100vh;
             background: linear-gradient(to bottom, var(--bg-dark), var(--bg-light));
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
             border: 5px solid var(--border);
             border-bottom: 10px solid var(--ground);
             border-radius: 20px;
             transition: background 0.5s, border 0.5s;
-            display: flex; /* Adicionado para controlo interno */
-            flex-direction: column;
+            display: flex; flex-direction: column;
         }
         
         #game-container.shake { animation: screen-shake 0.2s; }
         #game-canvas { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
 
-        /* Interface (HUD) redesenhada */
+        /* Interface (HUD) */
         #ui-container {
             position: absolute; top: 15px; left: 15px; right: 15px;
             display: flex; justify-content: space-between; align-items: center;
             gap: 10px; z-index: 10;
         }
-        
         .hud-item {
             background: rgba(0, 0, 0, 0.25); padding: 8px 15px; border-radius: 20px;
             border: 2px solid rgba(255, 255, 255, 0.3); display: flex;
-            align-items: center; 
-            font-size: clamp(16px, 4vw, 24px); /* MELHORIA: Fonte adaptável */
-            color: white;
-            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+            align-items: center; font-size: clamp(16px, 4vw, 24px);
+            color: white; text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        .hud-item.pulsate { animation: pulsate-red 0.5s; }
         .hud-item span { margin-left: 8px; }
+        #combo-display { color: var(--primary-yellow); font-weight: bold; }
 
         /* Telas de Menu */
         .screen {
@@ -78,10 +75,11 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center; padding: 20px; box-sizing: border-box; z-index: 100;
             color: white; transition: opacity 0.5s, visibility 0.5s;
+            overflow-y: auto;
         }
         .screen.hidden { opacity: 0; visibility: hidden; }
         .screen h1 {
-            font-size: clamp(40px, 12vw, 60px); /* MELHORIA: Fonte adaptável */
+            font-size: clamp(40px, 12vw, 60px);
             color: var(--primary-yellow);
             text-shadow: 4px 4px 0px var(--shadow-yellow), 0 0 30px var(--primary-yellow);
             margin-bottom: 20px; animation: bounce-in 1s ease-out;
@@ -92,7 +90,7 @@
         .screen .final-stars { font-size: clamp(40px, 12vw, 60px); margin: 20px 0; letter-spacing: 10px; }
         .screen button {
             font-family: 'Fredoka One', cursive; padding: 15px 30px; 
-            font-size: clamp(18px, 5vw, 24px); /* MELHORIA: Fonte adaptável */
+            font-size: clamp(18px, 5vw, 24px);
             color: var(--text-dark); background: linear-gradient(180deg, var(--primary-yellow), var(--secondary-yellow));
             border: none; border-radius: 15px; border-bottom: 6px solid var(--shadow-yellow);
             cursor: pointer; transition: all 0.1s ease-in-out; margin-top: 10px;
@@ -104,40 +102,58 @@
         .menu-selection { display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center; }
         .menu-selection button { width: 80%; max-width: 350px; display: flex; justify-content: center; align-items: center; gap: 15px;}
         .menu-selection button .icon { font-size: clamp(24px, 6vw, 30px); }
-        #theme-toggle-button { background: #3498db; border-bottom-color: #2980b9; color: white;}
+        #upgrades-button { background: #2ecc71; border-bottom-color: #27ae60; color: white;}
+        #achievements-button { background: #3498db; border-bottom-color: #2980b9; color: white;}
         #choose-emoji-button { background: #9b59b6; border-bottom-color: #8e44ad; color: white;}
         
-        /* Loja de Emojis e Seleção de Níveis */
-        #level-select-container, #emoji-select-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 350px; }
-        #emoji-select-container { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+        /* Loja, Upgrades, Conquistas */
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 350px; margin-bottom: 20px;}
+        .emoji-item, .upgrade-item, .achievement-item { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; }
         
-        #emoji-select-container .emoji-item { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 10px; }
-        #emoji-select-container .emoji-button { font-size: 48px; width: 100%; padding: 10px 0; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; }
-        #emoji-select-container .emoji-button.selected { border-color: var(--primary-yellow); box-shadow: 0 0 20px var(--primary-yellow); }
-        .emoji-price { font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 5px; }
-        .emoji-price.unlocked { color: #2ecc71; }
+        .emoji-button { font-size: 48px; width: 100%; padding: 10px 0; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; }
+        .emoji-button.selected { border-color: var(--primary-yellow); box-shadow: 0 0 20px var(--primary-yellow); }
+        .price { font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 5px; }
+        .price.unlocked { color: #2ecc71; }
         
-        #level-select-screen button { padding: 20px; font-size: 32px; position: relative; }
-        #level-select-screen button.locked { background: #888; border-bottom-color: #555; color: #bbb; cursor: not-allowed; }
-        #level-select-screen button.locked::after { content: '🔒'; position: absolute; font-size: 20px; top: 5px; right: 10px; }
+        .upgrade-container { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 380px; }
+        .upgrade-item { display: grid; grid-template-columns: 1fr auto; align-items: center; text-align: left; padding: 15px; }
+        .upgrade-info strong { display: block; font-size: 20px; }
+        .upgrade-info .level { font-size: 14px; opacity: 0.8; }
+        .upgrade-item button { padding: 10px 15px; font-size: 16px; margin-top: 0; }
+        
+        .achievement-container { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 380px; }
+        .achievement-item { display: flex; align-items: center; gap: 15px; text-align: left; padding: 15px; opacity: 0.5;}
+        .achievement-item.unlocked { opacity: 1; border: 2px solid var(--primary-yellow); box-shadow: 0 0 10px var(--primary-yellow); }
+        .achievement-icon { font-size: 40px; }
+        .achievement-info strong { display: block; }
+        .achievement-info span { font-size: 14px; opacity: 0.8; }
+        
         .back-to-menu-button { margin-top: 40px; background: #7f8c8d; border-bottom-color: #606b6c; color: white;}
         
         /* Chefe e Comemorações */
         #boss-container { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 80px; z-index: 20; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
         #boss-container.visible { opacity: 1; }
         #boss-container.throw { animation: boss-throw 0.3s ease-out; }
-
         #boss-health-bar { position: absolute; top: 110px; left: 10%; width: 80%; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 2px solid white; z-index: 10; padding: 2px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s; }
         #boss-health { width: 100%; height: 100%; background: linear-gradient(to right, #e74c3c, #c0392b); border-radius: 6px; transition: width 0.5s ease-out; }
         #boss-health-bar.visible { opacity: 1; }
-        #boss-arrival-text { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); font-size: 52px; color: #e74c3c; text-shadow: 3px 3px 0 black; z-index: 200; opacity: 0; pointer-events: none; }
+        #boss-arrival-text, #celebration-text {
+            position: absolute; top: 40%; left: 50%;
+            transform: translateX(-50%); font-size: 52px;
+            color: #e74c3c; text-shadow: 3px 3px 0 black;
+            z-index: 200; opacity: 0; pointer-events: none;
+            width: 90%; text-align: center;
+        }
+        #celebration-text { color: var(--primary-yellow); text-shadow: 4px 4px 0px var(--shadow-yellow); transition: opacity 0.5s ease-out; }
         #boss-arrival-text.animate { animation: bounce-in 1.5s ease-out, fade-out 1.5s 2s forwards; }
+        #celebration-text.animate { opacity: 1; animation: bounce-in 1s ease-out; }
 
-        /* MELHORIA: Ajuste da animação de celebração */
+        /* Animações */
         @keyframes fade-out { to { opacity: 0; transform: translateX(-50%) scale(1.5); } }
         @keyframes screen-shake { 0% { transform: translate(0, 0); } 25% { transform: translate(-5px, 5px); } 50% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, 5px); } 100% { transform: translate(0, 0); }}
         @keyframes bounce-in { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; }}
         @keyframes boss-throw { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.2) rotate(-5deg); } 100% { transform: translateX(-50%) scale(1); } }
+        @keyframes pulsate-red { 50% { transform: scale(1.1); box-shadow: 0 0 15px red; } }
 
     </style>
 </head>
@@ -147,11 +163,13 @@
         <canvas id="game-canvas"></canvas>
         <div id="ui-container" class="hidden">
             <div id="score" class="hud-item">🥛<span>0</span></div>
+            <div id="combo-display" class="hud-item" style="display: none;">🔥<span>x1</span></div>
             <div id="lives" class="hud-item">❤️<span>3</span></div>
         </div>
         <div id="boss-container" class="hidden">🐵</div>
         <div id="boss-health-bar"><div id="boss-health"></div></div>
-        <div id="boss-arrival-text">O MACACO CHEGOU!</div>
+        <div id="boss-arrival-text"></div>
+        <div id="celebration-text"></div>
         
         <!-- Telas de Menu -->
         <div id="main-menu" class="screen">
@@ -160,8 +178,9 @@
             <div class="menu-selection">
                 <button data-mode="levels"><span class="icon">🏆</span>Modo Fases</button>
                 <button data-mode="infinite"><span class="icon">♾️</span>Modo Infinito</button>
+                <button id="upgrades-button"><span class="icon">🚀</span>Melhorias</button>
+                <button id="achievements-button"><span class="icon">🏅</span>Conquistas</button>
                 <button id="choose-emoji-button"><span class="icon">😀</span>Loja de Emoji</button>
-                <button id="theme-toggle-button"><span class="icon">☀️</span>Mudar Tema</button>
             </div>
             <p class="high-score" style="margin-top: 20px;">Recorde Infinito: 0</p>
         </div>
@@ -175,7 +194,20 @@
         <div id="emoji-select-screen" class="screen hidden">
             <h2>Loja de Personagens</h2>
             <p class="total-milk-display">Leite Total: 0</p>
-            <div id="emoji-select-container"></div>
+            <div id="emoji-select-container" class="grid-container"></div>
+            <button class="back-to-menu-button">Menu Principal</button>
+        </div>
+        
+        <div id="upgrades-screen" class="screen hidden">
+            <h2>Melhorias</h2>
+            <p class="total-milk-display">Leite Total: 0</p>
+            <div id="upgrade-container" class="upgrade-container"></div>
+            <button class="back-to-menu-button">Menu Principal</button>
+        </div>
+        
+        <div id="achievements-screen" class="screen hidden">
+            <h2>Conquistas</h2>
+            <div id="achievement-container" class="achievement-container"></div>
             <button class="back-to-menu-button">Menu Principal</button>
         </div>
         
@@ -206,10 +238,13 @@
         const uiContainer = document.getElementById('ui-container');
         const scoreElement = document.querySelector('#score span');
         const livesElement = document.querySelector('#lives span');
+        const comboDisplay = document.getElementById('combo-display');
+        const comboMultiplierSpan = document.querySelector('#combo-display span');
         const bossContainer = document.getElementById('boss-container');
         const bossHealthBar = document.getElementById('boss-health-bar');
         const bossHealthFill = document.getElementById('boss-health');
         const bossArrivalText = document.getElementById('boss-arrival-text');
+        const celebrationText = document.getElementById('celebration-text');
         
         // --- Menus e Telas ---
         const mainMenu = document.getElementById('main-menu');
@@ -217,6 +252,10 @@
         const levelSelectContainer = document.getElementById('level-select-container');
         const emojiSelectScreen = document.getElementById('emoji-select-screen');
         const emojiSelectContainer = document.getElementById('emoji-select-container');
+        const upgradesScreen = document.getElementById('upgrades-screen');
+        const upgradeContainer = document.getElementById('upgrade-container');
+        const achievementsScreen = document.getElementById('achievements-screen');
+        const achievementContainer = document.getElementById('achievement-container');
         const gameOverScreen = document.getElementById('game-over-screen');
         const levelCompleteScreen = document.getElementById('level-complete-screen');
         const finalScoreElement = document.getElementById('final-score');
@@ -228,6 +267,8 @@
         const modeButtons = document.querySelectorAll('.menu-selection button[data-mode]');
         const chooseEmojiButton = document.getElementById('choose-emoji-button');
         const themeToggleButton = document.getElementById('theme-toggle-button');
+        const upgradesButton = document.getElementById('upgrades-button');
+        const achievementsButton = document.getElementById('achievements-button');
         const restartButton = document.getElementById('restart-button');
         const nextLevelButton = document.getElementById('next-level-button');
         const backToMenuButtons = document.querySelectorAll('.back-to-menu-button');
@@ -240,24 +281,42 @@
         // --- Variáveis de Estado do Jogo ---
         let player, items, score, lives, gameOver, itemSpawnInterval, gameLoopId, particles, stars, highScore = 0, totalMilk = 0;
         let gameMode, currentLevel, levelGoal, levelStars, isInvincible = false, invincibilityTimer = 0;
-        let isBossFightActive = false, bossState = {};
+        let isBossFightActive = false, bossState = {}, bossAttackInterval, bossSpecialItemInterval;
         let temporaryPlayerEmoji = null;
+        let combo = { count: 0, multiplier: 1 };
+        let slowedTimer = 0;
+        let goldenMilkTimer = 0;
+        let magnetTimer = 0;
+        let nextCelebrationScore = 50;
+        let nextBossScore = 100;
 
         // --- Constantes do Jogo ---
-        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '�': 200, '🤤': 300, '😼': 500 };
+        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
         const PLAYER_EMOJIS = Object.keys(EMOJI_PRICES);
         let unlockedEmojis = ['😏'];
         let PLAYER_EMOJI = '😏';
+        
         const MILK_EMOJI = '🥛';
-        const OBSTACLE_EMOJI = '🍆';
+        const OBSTACLE_EMOJI = '�';
         const SHIELD_EMOJI = '🐅';
-        const BANANA_EMOJI = '🍌';
         const GLOWING_MILK_EMOJI = '✨';
-        const HEART_EMOJI = '💖'; // Novo item de coração
+        const HEART_EMOJI = '💖';
+        const GOLDEN_MILK_EMOJI = '🌟';
+        const MAGNET_EMOJI = '🧲';
+        const SLOW_EMOJI = '🐌';
+        
+        const BOSSES = [
+            { name: "Macaco Safado", emoji: "🐵", projectile: "🍌" },
+            { name: "Touro Zangado", emoji: "🐂", projectile: "💨" },
+            { name: "Polvo Pegajoso", emoji: "🐙", projectile: "💦" },
+        ];
+        
         const PLAYER_SIZE = 50;
         const ITEM_SIZE = 40;
         const LEVELS = [{ goal: 50 }, { goal: 100 }, { goal: 150 }, { goal: 200 }, { goal: 250 }];
         let highestLevelUnlocked = 1;
+        
+        const CELEBRATION_MESSAGES = ["Bela mamada!", "Que boca de veludo!", "Eita que delícia!", "Chupador profissional!", "A Cleide sem calcinha!", "Engole tudo!", "Boca de aspirador!", "Garganta de ouro!", "Nem piscou!", "Fez render!", "Talento nato!", "O rei da chupeta!", "Aceita tudo!", "Isso é que é gozo!", "Mandou bem!", "És o maior!"];
         
         // --- GESTÃO DE DADOS (localStorage) ---
         function loadData() {
@@ -266,11 +325,10 @@
             highestLevelUnlocked = parseInt(localStorage.getItem('highestLevelUnlocked') || '1', 10);
             PLAYER_EMOJI = localStorage.getItem('playerEmoji') || '😏';
             unlockedEmojis = JSON.parse(localStorage.getItem('unlockedEmojis') || '["😏"]');
+            
             const savedTheme = localStorage.getItem('gameTheme');
-            if (savedTheme === 'day') {
-                document.documentElement.style.setProperty('--bg-dark', '#4e7eff');
-                document.documentElement.style.setProperty('--bg-light', '#81c7ff');
-                document.documentElement.style.setProperty('--ground', '#2ecc71');
+            if (savedTheme) {
+                gameContainer.className = savedTheme;
             }
             updateUIDisplays();
         }
@@ -366,6 +424,15 @@
             }
         }
 
+        function showCelebration() {
+            const message = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)];
+            celebrationText.textContent = message;
+            celebrationText.classList.add('animate');
+            setTimeout(() => {
+                celebrationText.classList.remove('animate');
+            }, 3000); // Duração da animação
+        }
+
         // --- LÓGICA PRINCIPAL DO JOGO ---
         function initGame(mode) {
             gameMode = mode;
@@ -373,9 +440,13 @@
             lives = 3; gameOver = false; particles = []; items = [];
             isInvincible = false; invincibilityTimer = 0;
             isBossFightActive = false;
+            combo = { count: 0, multiplier: 1 };
+            slowedTimer = 0; goldenMilkTimer = 0; magnetTimer = 0;
+            nextCelebrationScore = 50;
+            nextBossScore = 100;
             
             if (gameMode === 'levels') { levelGoal = LEVELS[currentLevel - 1].goal; levelStars = 3; } else { levelGoal = -1; }
-            player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: canvas.height - PLAYER_SIZE - 20, width: PLAYER_SIZE, height: PLAYER_SIZE, speed: 8, bobble: 0, scaleX: 1, scaleY: 1 };
+            player = { x: canvas.width / 2 - PLAYER_SIZE / 2, y: canvas.height - PLAYER_SIZE - 20, width: PLAYER_SIZE, height: PLAYER_SIZE, speed: 6, bobble: 0, scaleX: 1, scaleY: 1 }; // Velocidade inicial reduzida
             if (!stars) createStars();
 
             updateUI();
@@ -391,7 +462,13 @@
 
         function gameLoop() {
             if (gameOver) return;
-            let playerSpeedX = (keys['ArrowRight'] || keys['d']) ? 1 : (keys['ArrowLeft'] || keys['a']) ? -1 : 0;
+            const currentSpeed = (slowedTimer > 0) ? player.speed / 2 : player.speed;
+            let playerSpeedX = 0;
+            if (keys['ArrowLeft'] || keys['a']) playerSpeedX = -currentSpeed;
+            if (keys['ArrowRight'] || keys['d']) playerSpeedX = currentSpeed;
+            player.x += playerSpeedX;
+            player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawStars(playerSpeedX);
             drawPlayer();
@@ -399,24 +476,32 @@
             drawItems();
             if(isBossFightActive) updateBoss();
 
-            if (isInvincible) {
-                invincibilityTimer--;
-                if(invincibilityTimer <= 0) isInvincible = false;
-            }
+            if (isInvincible) invincibilityTimer--;
+            if (slowedTimer > 0) slowedTimer--;
+            if (goldenMilkTimer > 0) goldenMilkTimer--;
+            if (magnetTimer > 0) magnetTimer--;
+
+            if(isInvincible && invincibilityTimer <= 0) isInvincible = false;
+            
             gameLoopId = requestAnimationFrame(gameLoop);
         }
         
         function triggerPlayerAnimation(type) {
-            if (type === 'collect') {
-                temporaryPlayerEmoji = '😋';
-            } else if (type === 'damage') {
+            if (type === 'collect') { temporaryPlayerEmoji = '😋'; } 
+            else if (type === 'damage') {
                 temporaryPlayerEmoji = '😵';
                 player.damageFlash = 10;
+                const livesHud = document.querySelector('#lives');
+                livesHud.classList.add('pulsate');
+                setTimeout(() => livesHud.classList.remove('pulsate'), 500);
             }
-
-            setTimeout(() => {
-                temporaryPlayerEmoji = null;
-            }, 300);
+            setTimeout(() => { temporaryPlayerEmoji = null; }, 300);
+        }
+        
+        function resetCombo() {
+            combo.count = 0;
+            combo.multiplier = 1;
+            comboDisplay.style.display = 'none';
         }
 
         function updateItems() {
@@ -424,41 +509,46 @@
             for (let i = items.length - 1; i >= 0; i--) {
                 const item = items[i];
 
-                if (item.type === 'banana') {
-                    item.x += item.speedX;
-                    item.y += item.speedY;
-                } else {
+                if (item.type === 'projectile') { item.x += item.speedX; item.y += item.speedY; } 
+                else {
+                    if (magnetTimer > 0 && (item.type === 'milk' || item.type === 'golden-milk')) {
+                        const dx = (player.x + player.width / 2) - (item.x + ITEM_SIZE / 2);
+                        item.x += dx * 0.05;
+                    }
                     item.y += item.speed * speedMultiplier;
                 }
 
                 if (item.y + ITEM_SIZE > player.y && item.y < player.y + player.height && item.x + ITEM_SIZE > player.x && item.x < player.x + player.width) {
-                    if (item.type === 'shield') { 
-                        isInvincible = true; invincibilityTimer = 180; 
-                        score += 2; // Tigre vale 2 leites
-                        triggerPlayerAnimation('collect');
-                        createParticles(item.x, item.y, 'gold', 40); 
-                    } 
-                    else if (item.type === 'heart') {
-                        lives = Math.min(lives + 1, 3); // Restaura 1 vida, máximo de 3
-                        createParticles(item.x, item.y, 'pink', 30);
-                    }
-                    else if (item.type === 'glowing-milk') {
-                        bossState.health--;
-                        createParticles(player.x, player.y, 'cyan', 30);
-                        items.push({ x: player.x, y: player.y, type: 'hit-projectile' });
-                    }
+                    if (item.type === 'shield') { isInvincible = true; invincibilityTimer = 180; score += 2; triggerPlayerAnimation('collect'); createParticles(item.x, item.y, 'gold', 40); } 
+                    else if (item.type === 'heart') { if (lives < 3) lives++; createParticles(item.x, item.y, 'pink', 30); }
+                    else if (item.type === 'golden-milk') { goldenMilkTimer = 300; createParticles(item.x, item.y, 'gold', 50); }
+                    else if (item.type === 'magnet') { magnetTimer = 300; createParticles(item.x, item.y, '#8e44ad', 40); }
+                    else if (item.type === 'glowing-milk') { bossState.health--; createParticles(player.x, player.y, 'cyan', 30); items.push({ x: player.x, y: player.y, type: 'hit-projectile' }); }
                     else if (item.type === 'milk') {
-                        score++;
+                        const pointsToAdd = goldenMilkTimer > 0 ? 2 * combo.multiplier : 1 * combo.multiplier;
+                        score += pointsToAdd;
+                        combo.count++;
+                        if (combo.count >= 5) combo.multiplier = 2;
+                        if (combo.count >= 10) combo.multiplier = 3;
+                        comboDisplay.style.display = 'flex';
+                        comboMultiplierSpan.textContent = `x${combo.multiplier}`;
                         triggerPlayerAnimation('collect');
-                        if (score === 100 && !isBossFightActive) startBossFight();
+                        if (score >= nextBossScore && !isBossFightActive) {
+                            startBossFight();
+                        } else if (score >= nextCelebrationScore && !isBossFightActive) {
+                            showCelebration();
+                            nextCelebrationScore += 50;
+                        }
                         createParticles(item.x, item.y, 'white', 25);
                         if (gameMode === 'levels' && score >= levelGoal) levelComplete();
-                    } else if (item.type === 'obstacle' || item.type === 'banana') {
+                    } else if (item.type === 'obstacle' || item.type === 'projectile' || item.type === 'slow') {
                         if (!isInvincible) {
                             lives--;
+                            resetCombo();
                             triggerPlayerAnimation('damage');
+                            if (item.type === 'slow') slowedTimer = 300;
                             if (gameMode === 'levels') levelStars = Math.max(1, levelStars - 1);
-                             const particleColor = item.type === 'obstacle' ? '#8e44ad' : 'yellow';
+                            const particleColor = item.type === 'obstacle' ? '#8e44ad' : (item.type === 'projectile' ? bossState.projectileColor : 'cyan');
                             createParticles(item.x, item.y, particleColor, 35);
                             gameContainer.classList.add('shake');
                             setTimeout(() => gameContainer.classList.remove('shake'), 200);
@@ -479,41 +569,41 @@
                     }
                 }
                 
-                if (item.y > canvas.height) items.splice(i, 1);
+                if (item.y > canvas.height) { if(item.type === 'milk') resetCombo(); items.splice(i, 1); }
             }
         }
         
         function startBossFight() {
             isBossFightActive = true;
+            const currentBossIndex = Math.floor((nextBossScore / 100) - 1) % BOSSES.length;
+            const currentBoss = BOSSES[currentBossIndex];
+
+            bossArrivalText.textContent = `O ${currentBoss.name} CHEGOU!`;
+            bossContainer.textContent = currentBoss.emoji;
             bossArrivalText.classList.add('animate');
             bossArrivalText.addEventListener('animationend', () => bossArrivalText.classList.remove('animate'), {once: true});
-            
             clearInterval(itemSpawnInterval);
-            
-            bossState = { health: 5, maxHealth: 5 };
+            bossState = { health: 5, maxHealth: 5, ...currentBoss };
             bossContainer.classList.add('visible');
             bossHealthBar.classList.add('visible');
-            
-            bossAttackInterval = setInterval(() => { if(!gameOver) spawnItem('banana'); }, 2000);
+            bossAttackInterval = setInterval(() => { if(!gameOver) spawnItem('projectile'); }, 2000);
             bossSpecialItemInterval = setInterval(() => { if(!gameOver) spawnItem('glowing-milk'); }, 3000);
         }
 
         function updateBoss() {
             bossHealthFill.style.width = `${(bossState.health / bossState.maxHealth) * 100}%`;
-            if(bossState.health <= 0) {
-                endBossFight();
-            }
+            if(bossState.health <= 0) endBossFight();
         }
         
         function endBossFight() {
             isBossFightActive = false;
+            nextBossScore += 100;
             const bossRect = bossContainer.getBoundingClientRect();
             createParticles(bossRect.left + bossRect.width/2, bossRect.top + bossRect.height/2, 'gold', 150);
             bossContainer.classList.remove('visible');
             bossHealthBar.classList.remove('visible');
             clearInterval(bossAttackInterval);
             clearInterval(bossSpecialItemInterval);
-            
             itemSpawnInterval = setInterval(spawnItem, 800);
             score += 250;
             updateUI();
@@ -522,10 +612,7 @@
         function endGame() {
             gameOver = true;
             clearInterval(itemSpawnInterval);
-            if(isBossFightActive) {
-                clearInterval(bossAttackInterval);
-                clearInterval(bossSpecialItemInterval);
-            }
+            if(isBossFightActive) { clearInterval(bossAttackInterval); clearInterval(bossSpecialItemInterval); }
             uiContainer.classList.add('hidden');
             bossContainer.classList.remove('visible');
             bossHealthBar.classList.remove('visible');
@@ -577,6 +664,9 @@
                  ctx.shadowColor = "red"; ctx.shadowBlur = 20;
                  player.damageFlash--;
             }
+            else if (slowedTimer > 0) {
+                ctx.shadowColor = "cyan"; ctx.shadowBlur = 15;
+            }
             else { ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 15; }
 
             ctx.font = `${PLAYER_SIZE}px sans-serif`; 
@@ -588,7 +678,7 @@
             player.scaleY += (1 - player.scaleY) * 0.2; 
         }
         
-        function drawItems() { ctx.font = `${ITEM_SIZE}px sans-serif`; for (const item of items) { let emoji; if(item.type === 'hit-projectile') emoji = MILK_EMOJI; else if (item.type === 'milk') emoji = MILK_EMOJI; else if (item.type === 'obstacle') emoji = OBSTACLE_EMOJI; else if (item.type === 'banana') emoji = BANANA_EMOJI; else if (item.type === 'heart') emoji = HEART_EMOJI; else emoji = SHIELD_EMOJI; const pulse = item.type === 'glowing-milk' ? 1.5 + Math.sin(Date.now()*0.01)*0.3 : 1; ctx.save(); ctx.translate(item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2); if (item.type === 'shield' || item.type === 'glowing-milk' || item.type === 'heart') { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } ctx.scale(pulse, pulse); ctx.rotate(item.rotation); ctx.fillText(emoji, -ITEM_SIZE / 2, ITEM_SIZE / 2); ctx.restore(); } }
+        function drawItems() { ctx.font = `${ITEM_SIZE}px sans-serif`; for (const item of items) { let emoji; if(item.type === 'hit-projectile') emoji = MILK_EMOJI; else if (item.type === 'milk') emoji = MILK_EMOJI; else if (item.type === 'obstacle') emoji = OBSTACLE_EMOJI; else if (item.type === 'projectile') emoji = bossState.projectile; else if (item.type === 'heart') emoji = HEART_EMOJI; else if (item.type === 'slow') emoji = SLOW_EMOJI; else if (item.type === 'magnet') emoji = MAGNET_EMOJI; else if (item.type === 'golden-milk') emoji = GOLDEN_MILK_EMOJI; else emoji = SHIELD_EMOJI; const pulse = item.type === 'glowing-milk' || item.type === 'golden-milk' ? 1.5 + Math.sin(Date.now()*0.01)*0.3 : 1; ctx.save(); ctx.translate(item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2); if (item.type === 'shield' || item.type === 'glowing-milk' || item.type === 'heart' || item.type === 'golden-milk') { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } ctx.scale(pulse, pulse); ctx.rotate(item.rotation); ctx.fillText(emoji, -ITEM_SIZE / 2, ITEM_SIZE / 2); ctx.restore(); } }
         
         function spawnItem(typeOverride = null) {
             const x = Math.random() * (canvas.width - ITEM_SIZE);
@@ -596,24 +686,26 @@
             
             if (typeOverride) {
                 type = typeOverride;
-                if(type === 'banana'){
+                if(type === 'projectile'){
                     bossContainer.classList.add('throw');
                     setTimeout(() => bossContainer.classList.remove('throw'), 300);
                     const bossX = bossContainer.offsetLeft + bossContainer.offsetWidth / 2;
                     const bossY = bossContainer.offsetTop + bossContainer.offsetHeight / 2;
-
                     const dx = player.x - bossX;
                     const dy = player.y - bossY;
                     const dist = Math.sqrt(dx*dx + dy*dy);
-                    items.push({ x: bossX, y: bossY, speedX: (dx/dist)*5, speedY: (dy/dist)*5, type: 'banana'});
+                    items.push({ x: bossX, y: bossY, speedX: (dx/dist)*5, speedY: (dy/dist)*5, type: 'projectile'});
                     return;
                 }
             } else {
                 const rand = Math.random(); 
-                if (rand < 0.04) { type = 'shield'; }       // 4% de chance para o tigre
-                else if (rand < 0.10) { type = 'heart'; }   // 6% de chance para o coração
-                else if (rand < 0.75) { type = 'milk'; }    // 65% de chance para o leite
-                else { type = 'obstacle'; }                 // 25% de chance para o obstáculo
+                if (rand < 0.02) { type = 'golden-milk'; }
+                else if (rand < 0.05) { type = 'magnet'; }
+                else if (rand < 0.08) { type = 'shield'; }       
+                else if (rand < 0.12 && score >= 50) { type = 'heart'; }  
+                else if (rand < 0.70) { type = 'milk'; } 
+                else if (rand < 0.85) { type = 'slow'; }
+                else { type = 'obstacle'; }                 
             }
              items.push({ x, y: -ITEM_SIZE, speed, type, rotation: Math.random() * Math.PI * 2, rotationSpeed: (Math.random() - 0.5) * 0.1 });
         }
@@ -629,17 +721,21 @@
         // --- EVENTOS DOS BOTÕES DO MENU ---
         modeButtons.forEach(button => { button.addEventListener('click', () => { const mode = button.dataset.mode; if (mode === 'infinite') { initGame('infinite'); } else { populateLevelSelect(); showScreen(levelSelectScreen); } }); });
         chooseEmojiButton.addEventListener('click', () => { populateEmojiSelect(); showScreen(emojiSelectScreen); });
-        themeToggleButton.addEventListener('click', () => {
-            const root = document.documentElement;
-            const isNight = getComputedStyle(root).getPropertyValue('--bg-dark').trim() === '#141e30';
-            if(isNight) {
-                root.style.setProperty('--bg-dark', '#4e7eff'); root.style.setProperty('--bg-light', '#81c7ff');
-                root.style.setProperty('--ground', '#2ecc71'); localStorage.setItem('gameTheme', 'day');
-            } else {
-                root.style.setProperty('--bg-dark', '#141e30'); root.style.setProperty('--bg-light', '#243b55');
-                root.style.setProperty('--ground', '#27ae60'); localStorage.setItem('gameTheme', 'night');
-            }
-        });
+        
+        // FIX: Adiciona verificações para os botões que podem não existir
+        if (upgradesButton) upgradesButton.addEventListener('click', () => { /* ...a implementar... */ });
+        if (achievementsButton) achievementsButton.addEventListener('click', () => { /* ...a implementar... */ });
+
+        if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', () => {
+                const root = document.documentElement;
+                const currentTheme = gameContainer.className || 'theme-night';
+                const themes = ['theme-night', 'theme-day', 'theme-hell', 'theme-candy', 'theme-forest', 'theme-space'];
+                const nextThemeIndex = (themes.indexOf(currentTheme) + 1) % themes.length;
+                gameContainer.className = themes[nextThemeIndex];
+                localStorage.setItem('gameTheme', themes[nextThemeIndex]);
+            });
+        }
         backToMenuButtons.forEach(button => { button.addEventListener('click', () => showScreen(mainMenu)); });
         toLevelSelectButtons.forEach(button => { button.addEventListener('click', () => { populateLevelSelect(); showScreen(levelSelectScreen); }); });
         restartButton.addEventListener('click', () => { initGame(gameMode); });
