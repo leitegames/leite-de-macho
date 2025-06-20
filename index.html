@@ -160,7 +160,11 @@
             <button class="back-to-menu-button">Menu Principal</button>
         </div>
 
-        <div id="level-select-screen" class="screen hidden">...</div>
+        <div id="level-select-screen" class="screen hidden">
+            <h2>Selecionar Fase</h2>
+            <div id="level-select-container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 350px;"></div>
+            <button class="back-to-menu-button">Menu Principal</button>
+        </div>
         
         <div id="emoji-select-screen" class="screen hidden">
              <h2>Loja de Personagens</h2>
@@ -178,7 +182,12 @@
             <button class="back-to-menu-button">Menu Principal</button>
         </div>
 
-        <div id="level-complete-screen" class="screen hidden">...</div>
+        <div id="level-complete-screen" class="screen hidden">
+            <h1>Fase Completa!</h1>
+            <div class="final-stars" style="font-size: clamp(40px, 12vw, 60px); margin: 20px 0; letter-spacing: 10px;"></div>
+            <button id="next-level-button">Próxima Fase</button>
+            <button class="level-select-button">Escolher Fase</button>
+        </div>
         
         <div id="name-modal" class="modal-overlay hidden">
             <div class="modal-content">
@@ -205,8 +214,10 @@
         const allScreens = document.querySelectorAll('.screen');
         const mainMenu = document.getElementById('main-menu');
         const rankingScreen = document.getElementById('ranking-screen');
+        const levelSelectScreen = document.getElementById('level-select-screen');
         const emojiSelectScreen = document.getElementById('emoji-select-screen');
         const gameOverScreen = document.getElementById('game-over-screen');
+        const levelCompleteScreen = document.getElementById('level-complete-screen');
         const nameModal = document.getElementById('name-modal');
         const uiContainer = document.getElementById('ui-container');
         const scoreElement = document.querySelector('#score span');
@@ -218,6 +229,7 @@
         const totalMilkDisplays = document.querySelectorAll('.total-milk-display');
         const rankingList = document.getElementById('ranking-list');
         const emojiSelectContainer = document.getElementById('emoji-select-container');
+        const levelSelectContainer = document.getElementById('level-select-container');
         const bossContainer = document.getElementById('boss-container');
         const bossHealthBar = document.getElementById('boss-health-bar');
         const bossHealthFill = document.getElementById('boss-health');
@@ -229,7 +241,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // --- Estado do Jogo ---
-        let player, items, score, lives, gameOver, itemSpawnInterval, gameLoopId, particles, stars;
+        let player, items, score, lives, gameOver, itemSpawnInterval, gameLoopId, particles, stars, bossAttackInterval, bossSpecialItemInterval;
         let gameMode, currentLevel, levelGoal, levelStars, highScore = 0, totalMilk = 0;
         let isInvincible = false, invincibilityTimer = 0;
         let isBossFightActive = false, bossState = {};
@@ -239,7 +251,7 @@
         let keys = {};
         
         // --- Constantes do Jogo ---
-        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
+        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '�': 200, '🤤': 300, '😼': 500 };
         const PLAYER_EMOJIS = Object.keys(EMOJI_PRICES);
         let unlockedEmojis = ['😏'];
         let PLAYER_EMOJI = '😏';
@@ -385,6 +397,7 @@
             }
         }
         
+        // --- LÓGICA DE MENUS E JOGO ---
         function initGame(mode) {
             gameMode = mode;
             score = 0; lives = 3; gameOver = false;
@@ -396,11 +409,8 @@
             nextCelebrationScore = 50; nextBossScore = 100;
             
             if (gameMode === 'levels') { 
-                const levelSelectContainer = document.getElementById('level-select-container');
-                if (levelSelectContainer) { // Adicionado para evitar erro se não existir
-                    levelGoal = LEVELS[currentLevel - 1].goal; 
-                    levelStars = 3; 
-                }
+                levelGoal = LEVELS[currentLevel - 1].goal; 
+                levelStars = 3; 
             } else { 
                 levelGoal = -1; 
             }
@@ -461,13 +471,9 @@
             clearInterval(itemSpawnInterval);
             if(isBossFightActive) { clearInterval(bossAttackInterval); clearInterval(bossSpecialItemInterval); }
             
-            if (gameMode === 'infinite') {
-                totalMilk += score;
-                if (score > highScore) {
-                    await saveScoreToLeaderboard(score);
-                }
-            } else { // Modo Fases
-                 totalMilk += score;
+            totalMilk += score;
+            if (gameMode === 'infinite' && score > highScore) {
+                await saveScoreToLeaderboard(score);
             }
             
             saveLocalData();
@@ -493,7 +499,13 @@
             if (finalStarsElement) finalStarsElement.innerHTML = '⭐'.repeat(levelStars) + '☆'.repeat(3 - levelStars);
             if (nextLevelButton) nextLevelButton.style.display = (currentLevel < LEVELS.length) ? 'inline-block' : 'none';
             
-            showScreen(document.getElementById('level-complete-screen'));
+            showScreen(levelCompleteScreen);
+        }
+
+        function unlockNextLevel() {
+             if (gameMode === 'levels' && currentLevel === highestLevelUnlocked && currentLevel < LEVELS.length) {
+                highestLevelUnlocked++;
+            }
         }
 
         function updateItems() {
@@ -527,10 +539,8 @@
                             const pointsToAdd = goldenMilkTimer > 0 ? 2 * combo.multiplier : 1 * combo.multiplier;
                             score += pointsToAdd;
                             combo.count++;
-                            if (combo.count >= 10) combo.multiplier = 3;
-                            else if (combo.count >= 5) combo.multiplier = 2;
-                            comboDisplay.style.display = 'flex';
-                            comboMultiplierSpan.textContent = `x${combo.multiplier}`;
+                            if (combo.count >= 10) combo.multiplier = 3; else if (combo.count >= 5) combo.multiplier = 2;
+                            comboDisplay.style.display = 'flex'; comboMultiplierSpan.textContent = `x${combo.multiplier}`;
                             triggerPlayerAnimation('collect');
                             if (score >= nextBossScore && !isBossFightActive) { startBossFight(); } 
                             else if (score >= nextCelebrationScore && !isBossFightActive) { showCelebration(); nextCelebrationScore += 50; }
@@ -543,8 +553,7 @@
                                 if (item.type === 'slow') slowedTimer = 300;
                                 if (gameMode === 'levels') levelStars = Math.max(1, levelStars - 1);
                                 createParticles(item.x, item.y, '#8e44ad', 35);
-                                gameContainer.classList.add('shake');
-                                setTimeout(() => gameContainer.classList.remove('shake'), 200);
+                                gameContainer.classList.add('shake'); setTimeout(() => gameContainer.classList.remove('shake'), 200);
                                 if (lives <= 0) { endGame(); return; }
                             } else { createParticles(item.x, item.y, 'lightgray', 15); }
                             break;
@@ -561,19 +570,28 @@
             }
         }
         
-        // --- Funções Auxiliares, de Desenho, etc. ---
+        // --- FUNÇÕES DE LÓGICA DE JOGO ADICIONAIS ---
         function updateUI() { scoreElement.textContent = gameMode === 'levels' ? `${score} / ${levelGoal}` : score; livesElement.textContent = lives; }
         function triggerPlayerAnimation(type) { if (type === 'collect') { temporaryPlayerEmoji = '😋'; } else if (type === 'damage') { temporaryPlayerEmoji = '😵'; player.damageFlash = 10; uiContainer.querySelector('#lives').classList.add('pulsate'); setTimeout(() => uiContainer.querySelector('#lives').classList.remove('pulsate'), 500); } setTimeout(() => { temporaryPlayerEmoji = null; }, 300); }
         function resetCombo() { combo.count = 0; combo.multiplier = 1; comboDisplay.style.display = 'none'; }
         function showScreen(screen) { allScreens.forEach(s => s.classList.add('hidden')); if(screen) screen.classList.remove('hidden'); }
-        function escapeHTML(str) { const div = document.createElement('div'); div.appendChild(document.createTextNode(str)); return div.innerHTML; }
+        function escapeHTML(str) { const div = document.createElement('div'); div.appendChild(document.createTextNode(str || "")); return div.innerHTML; }
         function createStars() { stars = Array.from({length: 150}, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5, parallax: 0.2 + Math.random() * 0.8 })); }
         function drawStars(playerSpeedX) { stars.forEach(star => { star.x -= playerSpeedX * star.parallax * 0.1; if (star.x < 0) star.x = canvas.width; if (star.x > canvas.width) star.x = 0; const flicker = Math.sin(Date.now() * 0.002 + star.x) * 0.2 + 0.8; ctx.fillStyle = `rgba(255, 255, 255, ${flicker})`; ctx.beginPath(); ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); ctx.fill(); }); }
         function createParticles(x, y, color, count) { for (let i = 0; i < count; i++) { particles.push({ x, y, color, size: Math.random() * 6 + 2, speedX: (Math.random() - 0.5) * 6, speedY: (Math.random() - 0.5) * 6, life: 40 }); } }
         function updateAndDrawParticles() { for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.speedX; p.y += p.speedY; p.speedY += 0.1; p.life--; if (p.life <= 0) { particles.splice(i, 1); } else { ctx.fillStyle = p.color; ctx.globalAlpha = p.life / 40; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); } } ctx.globalAlpha = 1.0; }
         function drawPlayer() { if (!player) return; player.bobble += 0.1; const yOffset = Math.sin(player.bobble) * 3; ctx.save(); ctx.translate(player.x + player.width / 2, player.y + player.height / 2 + yOffset); ctx.scale(player.scaleX, player.scaleY); ctx.shadowOffsetY = 8; ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 15; if (isInvincible) { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } else if (player.damageFlash > 0) { ctx.shadowColor = "red"; ctx.shadowBlur = 20; player.damageFlash--; } else if (slowedTimer > 0) { ctx.shadowColor = "cyan"; ctx.shadowBlur = 15; } ctx.font = `${PLAYER_SIZE}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(temporaryPlayerEmoji || PLAYER_EMOJI, 0, 0); ctx.restore(); player.scaleX += (1 - player.scaleX) * 0.2; player.scaleY += (1 - player.scaleY) * 0.2; }
-        // (Outras funções de desenho e lógica de jogo como drawItems, spawnItem, startBossFight, etc. continuam aqui)
+        function drawItems() { ctx.font = `${ITEM_SIZE}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; for (const item of items) { let emoji; switch(item.type) { case 'milk': emoji = MILK_EMOJI; break; case 'obstacle': emoji = OBSTACLE_EMOJI; break; case 'projectile': emoji = bossState.projectile; break; case 'heart': emoji = HEART_EMOJI; break; case 'slow': emoji = SLOW_EMOJI; break; case 'magnet': emoji = MAGNET_EMOJI; break; case 'golden-milk': emoji = GOLDEN_MILK_EMOJI; break; case 'glowing-milk': emoji = GLOWING_MILK_EMOJI; break; case 'shield': emoji = SHIELD_EMOJI; break; case 'hit-projectile': emoji = MILK_EMOJI; break; default: emoji = '❓'; break; } if (item.rotation !== undefined) item.rotation += item.rotationSpeed; const pulse = (item.type === 'glowing-milk' || item.type === 'golden-milk' || item.type === 'shield' || item.type === 'heart') ? 1.2 + Math.sin(Date.now()*0.01)*0.2 : 1; ctx.save(); ctx.translate(item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2); if (pulse !== 1) { ctx.shadowColor = "gold"; ctx.shadowBlur = 20; } if (item.rotation !== undefined) ctx.rotate(item.rotation); ctx.scale(pulse, pulse); ctx.fillText(emoji, 0, 0); ctx.restore(); } }
+        function spawnItem(typeOverride = null) { if (gameOver) return; const x = Math.random() * (canvas.width - ITEM_SIZE); let type, speed = 2.5 + Math.random() * 3.5; if (typeOverride) { type = typeOverride; if(type === 'projectile'){ bossContainer.classList.add('throw'); setTimeout(() => bossContainer.classList.remove('throw'), 300); const bossX = bossContainer.offsetLeft + bossContainer.offsetWidth / 2; const bossY = bossContainer.offsetTop + bossContainer.offsetHeight / 2; const dx = (player.x + player.width / 2) - bossX; const dy = (player.y + player.height / 2) - bossY; const dist = Math.sqrt(dx*dx + dy*dy); items.push({ x: bossX, y: bossY, speedX: (dx/dist)*5, speedY: (dy/dist)*5, type: 'projectile'}); return; } } else { const rand = Math.random(); if (rand < 0.02) { type = 'golden-milk'; } else if (rand < 0.05) { type = 'magnet'; } else if (rand < 0.08) { type = 'shield'; } else if (rand < 0.12 && score >= 50) { type = 'heart'; } else if (rand < 0.70) { type = 'milk'; } else if (rand < 0.85) { type = 'slow'; } else { type = 'obstacle'; } } items.push({ x, y: -ITEM_SIZE, speed, type, rotation: Math.random() * Math.PI, rotationSpeed: (Math.random() - 0.5) * 0.1 }); }
+        function startBossFight() { isBossFightActive = true; const currentBossIndex = Math.floor((nextBossScore / 100) - 1) % BOSSES.length; const currentBoss = BOSSES[currentBossIndex]; bossArrivalText.textContent = `O ${currentBoss.name} CHEGOU!`; bossContainer.textContent = currentBoss.emoji; bossArrivalText.classList.add('animate'); bossArrivalText.addEventListener('animationend', () => bossArrivalText.classList.remove('animate'), { once: true }); clearInterval(itemSpawnInterval); bossState = { health: 5, maxHealth: 5, ...currentBoss }; bossContainer.classList.add('visible'); bossHealthBar.classList.remove('hidden'); bossHealthBar.classList.add('visible'); updateBoss(); bossAttackInterval = setInterval(() => { if(!gameOver) spawnItem('projectile'); }, 2000); bossSpecialItemInterval = setInterval(() => { if(!gameOver) spawnItem('glowing-milk'); }, 3000); }
+        function updateBoss() { bossHealthFill.style.width = `${(bossState.health / bossState.maxHealth) * 100}%`; if(bossState.health <= 0) endBossFight(); }
+        function endBossFight() { if (!isBossFightActive) return; isBossFightActive = false; nextBossScore += 100; const bossRect = bossContainer.getBoundingClientRect(); createParticles(bossRect.left + bossRect.width/2, bossRect.top + bossRect.height/2, 'gold', 150); bossContainer.classList.remove('visible'); bossHealthBar.classList.add('hidden'); clearInterval(bossAttackInterval); clearInterval(bossSpecialItemInterval); itemSpawnInterval = setInterval(spawnItem, 800); score += 250; updateUI(); }
+        function showCelebration() { const message = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)]; celebrationText.textContent = message; celebrationText.classList.add('animate'); celebrationText.addEventListener('animationend', () => celebrationText.classList.remove('animate'), { once: true }); }
+        function populateLevelSelect() { levelSelectContainer.innerHTML = ''; LEVELS.forEach((level, index) => { const levelNum = index + 1; const button = document.createElement('button'); button.textContent = levelNum; if (levelNum > highestLevelUnlocked) { button.disabled = true; button.style.cursor = 'not-allowed'; button.style.filter = 'grayscale(1)'; } else { button.addEventListener('click', () => { currentLevel = levelNum; initGame('levels'); }); } levelSelectContainer.appendChild(button); }); }
+        function populateEmojiSelect() { emojiSelectContainer.innerHTML = ''; PLAYER_EMOJIS.forEach(emoji => { const isUnlocked = unlockedEmojis.includes(emoji); const price = EMOJI_PRICES[emoji]; const itemDiv = document.createElement('div'); itemDiv.className = 'emoji-item'; const button = document.createElement('button'); button.className = 'emoji-button'; button.textContent = emoji; if (emoji === PLAYER_EMOJI) button.classList.add('selected'); button.addEventListener('click', () => { if (isUnlocked) { PLAYER_EMOJI = emoji; saveLocalData(); populateEmojiSelect(); } else if (totalMilk >= price) { buyEmoji(emoji, price); } }); const priceDiv = document.createElement('div'); priceDiv.className = 'price'; if (isUnlocked) { priceDiv.textContent = '✔️'; priceDiv.classList.add('unlocked'); } else { priceDiv.innerHTML = `🥛 <span>${price}</span>`; if (totalMilk < price) { button.disabled = true; } } itemDiv.appendChild(button); itemDiv.appendChild(priceDiv); emojiSelectContainer.appendChild(itemDiv); }); }
+        function buyEmoji(emoji, price) { if (totalMilk >= price) { totalMilk -= price; unlockedEmojis.push(emoji); PLAYER_EMOJI = emoji; saveLocalData(); updateUIDisplays(); populateEmojiSelect(); } }
 
+        // --- PONTO DE ENTRADA E EVENT LISTENERS ---
         function setupEventListeners() {
             window.addEventListener('keydown', (e) => keys[e.key] = true);
             window.addEventListener('keyup', (e) => keys[e.key] = false);
@@ -582,22 +600,15 @@
             canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (e.touches[0]) movePlayer(e.touches[0].clientX); });
 
             document.querySelector('button[data-mode="infinite"]').addEventListener('click', () => initGame('infinite'));
-            // Lógica para modo fases (se mantida)
-            const levelModeButton = document.querySelector('button[data-mode="levels"]');
-            if(levelModeButton) levelModeButton.addEventListener('click', () => { 
-                const levelSelectScreen = document.getElementById('level-select-screen');
-                // populateLevelSelect(); // Esta função precisa ser definida se o modo de níveis for usado
-                showScreen(levelSelectScreen); 
-            });
-
+            document.querySelector('button[data-mode="levels"]').addEventListener('click', () => { populateLevelSelect(); showScreen(levelSelectScreen); });
             document.getElementById('ranking-button').addEventListener('click', fetchAndDisplayLeaderboard);
-            document.getElementById('choose-emoji-button').addEventListener('click', () => {
-                populateEmojiSelect(); // Função precisa ser definida
-                showScreen(emojiSelectScreen); 
-            });
+            document.getElementById('choose-emoji-button').addEventListener('click', () => { populateEmojiSelect(); showScreen(emojiSelectScreen); });
             document.getElementById('restart-button').addEventListener('click', () => initGame(gameMode));
             document.getElementById('save-name-button').addEventListener('click', savePlayerName);
             document.querySelectorAll('.back-to-menu-button').forEach(btn => btn.addEventListener('click', () => showScreen(mainMenu)));
+            document.querySelectorAll('.level-select-button').forEach(btn => btn.addEventListener('click', () => { populateLevelSelect(); showScreen(levelSelectScreen); }));
+            const nextLevelButton = document.getElementById('next-level-button');
+            if (nextLevelButton) nextLevelButton.addEventListener('click', () => { if (currentLevel < LEVELS.length) { currentLevel++; initGame('levels'); } });
             window.addEventListener('resize', () => { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; });
         }
 
@@ -613,3 +624,4 @@
     </script>
 </body>
 </html>
+�
