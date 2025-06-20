@@ -72,7 +72,7 @@
         .screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
             text-align: center; padding: 20px; box-sizing: border-box; z-index: 100;
             color: white; transition: opacity 0.5s, visibility 0.5s;
             overflow-y: auto;
@@ -82,6 +82,7 @@
             font-size: clamp(40px, 12vw, 60px);
             color: var(--primary-yellow);
             text-shadow: 4px 4px 0px var(--shadow-yellow), 0 0 30px var(--primary-yellow);
+            margin-top: 40px;
             margin-bottom: 20px; animation: bounce-in 1s ease-out;
         }
         .screen h2 { font-size: clamp(30px, 8vw, 40px); margin-bottom: 20px; }
@@ -291,13 +292,13 @@
         let nextBossScore = 100;
 
         // --- Constantes do Jogo ---
-        const EMOJI_PRICES = { '😏': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
+        const EMOJI_PRICES = { '�': 0, '😈': 100, '😎': 150, '😜': 200, '🤤': 300, '😼': 500 };
         const PLAYER_EMOJIS = Object.keys(EMOJI_PRICES);
         let unlockedEmojis = ['😏'];
         let PLAYER_EMOJI = '😏';
         
         const MILK_EMOJI = '🥛';
-        const OBSTACLE_EMOJI = '�';
+        const OBSTACLE_EMOJI = '🍆';
         const SHIELD_EMOJI = '🐅';
         const GLOWING_MILK_EMOJI = '✨';
         const HEART_EMOJI = '💖';
@@ -307,7 +308,7 @@
         
         const BOSSES = [
             { name: "Macaco Safado", emoji: "🐵", projectile: "🍌" },
-            { name: "Touro Zangado", emoji: "🐂", projectile: "💨" },
+            { name: "Touro Tarado", emoji: "🐂", projectile: "💨" },
             { name: "Polvo Pegajoso", emoji: "🐙", projectile: "💦" },
         ];
         
@@ -723,9 +724,12 @@
         chooseEmojiButton.addEventListener('click', () => { populateEmojiSelect(); showScreen(emojiSelectScreen); });
         
         // FIX: Adiciona verificações para os botões que podem não existir
-        if (upgradesButton) upgradesButton.addEventListener('click', () => { /* ...a implementar... */ });
-        if (achievementsButton) achievementsButton.addEventListener('click', () => { /* ...a implementar... */ });
-
+        if (upgradesButton) {
+            upgradesButton.addEventListener('click', () => { /* A ser implementado */ showScreen(upgradesScreen); });
+        }
+        if (achievementsButton) {
+            achievementsButton.addEventListener('click', () => { /* A ser implementado */ showScreen(achievementsScreen); });
+        }
         if (themeToggleButton) {
             themeToggleButton.addEventListener('click', () => {
                 const root = document.documentElement;
